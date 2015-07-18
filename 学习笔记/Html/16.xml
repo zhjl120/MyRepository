@@ -1,0 +1,15 @@
+<?xml version="1.0"? encoding="gb2312">
+<book>
+	<smallbook>this is a samllbook</smallbook>	
+	<price>$12.3</price>
+	<bigbook>this is a bigbook</biglbook>
+	<price2>$22.3</price2>
+	<bookmark/>	
+</book>
+
+
+<!-- XHTML
+	1.单标签必须被关闭
+	2.单属性值必须等于它自身
+	3.尽可能不使用废弃标签
+-->

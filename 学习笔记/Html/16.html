@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=gb2312" />
+<title>CSS边框与边界</title>
+
+<style type="text/css">
+	img{
+		/*边框的使用*/
+		border-style:double solid dashed dotted; /*设置边框的样式，如果不设置该属性，则它默认为没有边框*/
+		border-width:5px 10px 15px 20px;  /*表框的边界宽度*/
+		border-color:red green blue yellow; /*边框四边的颜色*/
+		/*border:3px dashed green;/*简写方式*/
+	}
+	td{
+		/*内边距*/
+		padding-top:20px; /* 设置内容与上边界之间的距离*/
+		padding-right:24px;
+		padding-left:30px;
+		padding-bottom:23px
+		/*简写形式
+		padding:20px;
+		padding:10px 20px;
+		padding:10px 20px 30px;
+		padding:10px 20px 30px 40px;*/
+	}
+	table{
+		/*外边距*/
+		margin-top:20px;	/*设置容器与其它容器之间的距离*/
+		margin-left:20px;
+		margin-right:23px;
+		margin-bottom:30px;
+		/*简写方式
+		margin:2px 4px;
+		margin:2px 6px 10px;
+		margin:2px 4px 5px 9px;*/
+		/*常用网页定格设置：margin:0*/
+	}
+	
+</style>
+
+</head>
+<body>
+	
+	<img src="img/1.jpg" />
+	
+	<br /><br /><br />
+		
+	<table border="0" bgcolor="green" width="300" height="200" cellspacing="0">
+		<tr>
+			<td valign="top">边界测试</td>
+		</tr>	
+	</table>	
+
+	
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=gb2312" />
+<title>CSS区块、浮动、定位、溢出、滚动条</title>
+<style type="text/css">
+	
+	/*区块测试*/
+	div{
+		/*只有区块才能使用以下属性，如div、p标签等*/
+		background-color:green;
+		width:200px; /*设置区块宽度和高度*/
+		height:200px;;
+		/*max-height:500px;/*设置区块最大和最小高度，它们不能用height属性一起使用
+		min-height:100px;*/
+		
+		/*以下标签用于设置区块格式，不是只有区块才能使用，其它标签也能使用*/
+		padding-top:20px;
+		padding-left:20px;
+		margin-top:20px;
+		margin-left:20px;
+		margin-bottom:20px;
+	}
+	
+	/*浮动测试*/
+	.div1{
+		width:100px;
+		height:100px;
+		background:orange;	
+		float:left; /*浮动属性，使区块后面的内容可以浮动到区块的右边*/
+	}
+	.div2{
+		width:100px;
+		height:100px;
+		background:red;	
+		float:left;
+	}
+	.div3{
+		width:100px;
+		height:100px;
+		background:green;	
+		clear:left; /*清楚浮动，使用区块不使用浮动功能*/
+	}
+	
+	/*定位测试*/
+	img{
+		position:absolute; /*相对定位和绝对定位
+		相对定位是基于区块的左上角，绝对定位是基于网页的左上角。*/
+		top:200px;  /*设置定位距离四边的长度*/
+		left:300px;
+	}
+	/*溢出测试*/
+	.div4{
+		background-color:orange;
+		width:100px;
+		height:100px;	
+		overflow:auto; /*设置溢出的处理方式,当内容超过了区块的容量时，可以设置它的不同处理方式*/
+		/*滚动条测试*/
+		scrollbar-arrow-color:red;/*设置滚动条的样式*/
+		scrollbar-track-color:green;
+		scrollbar-highlight-color:black;
+		scrollbar-face-color:yellow;
+	}
+	
+</style>
+</head>
+<body>
+	
+	<div>区块测试</div>
+	<br /><br /><br /><br />
+	
+	<!--浮动测试-->
+	<div class="div1"></div>
+	<div class="div2"></div>
+	<div class="div3"></div>
+	
+	<br /><br /><br /><br />
+	<!--定位测试-->
+	<img src="img/1.jpg" />
+	<br />
+	定位测试
+	
+	<br /><br /><br /><br />
+	<!--溢出测试-->	
+	<div class="div4">溢出测试溢出测试溢出测试溢出测试溢出测试溢出测试溢出测试溢出测试溢出测试溢出测试溢出测试溢出测试溢出测试溢出测试</div>
+	
+</html>

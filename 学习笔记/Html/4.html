@@ -1,0 +1,72 @@
+<!--
+	  表格的基本属性 
+	  table标签的常用属性
+	  table标签的边框设置
+	  tr\th\td标签的常用属性
+	  拆分与合并单元格
+	  表格的格式化、直列化、标题
+	  表格的嵌套
+-->
+
+<html>
+<head>
+	<title>表格</title>
+</head>	
+<body>
+	<!--表格的基本属性 -->
+	<table bgcolor="green" border="1" width="300" cellspacing="3" cellpadding="3" height="150" align="center">  <!--表格的开始，它拥有许多属性-->
+		<tr height="50" bgcolor="red" align="center">		<!--tr 表示一行 ,  th表示标题栏  ， td表示数据栏-->
+			<th>姓名</th><!--设置列的名称,一般只有一行标题-->
+			<th>学号</th>
+			<th>性别</th>
+		</tr>
+		<tr>		<!--设置列的内容，一般有一行或多行内容-->
+			<td>张三</td>
+			<td>101</td>
+			<td>男</td></tr> 
+		<tr>
+			<td>张三</td>
+			<td>101</td>
+			<td>男</td></tr>
+		<tr>
+			<td>张三</td>
+			<td>101</td>
+			<td>男</td>
+		</tr>
+	</table>
+	
+	
+	<!--格式化表格 -->
+	<table>
+		<caption align="top">表格的标题</caption>
+		<tfoot><!--定义表格的底部而不管它在代码中存放的位置 -->
+			<tr>
+				<td>张三</td>
+				<td>103</td>
+				<td>男</td>
+			</tr>
+		</tfoot>
+		<thead><!--定义表格的头部而不管它在代码中存放的位置 -->
+			<tr>
+				<th>A</th>
+				<th>B</th>
+				<th>C</th>
+			</tr>
+		</thead>
+		<tbody><!--定义表格的内容而不管它在代码中存放的位置 -->
+			<tr>
+				<td>张三</td>
+				<td>101</td>
+				<td>男</td>
+			</tr>
+			<tr>
+				<td>张三</td>
+				<td>102</td>
+				<td>男</td>
+			</tr>
+		</tbody>
+	</table>
+	
+	
+</body>
+</html>

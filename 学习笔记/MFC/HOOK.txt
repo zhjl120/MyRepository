@@ -1,0 +1,71 @@
+1.安装钩子过程
+	SetWindowsHookEx();//安装钩子过程
+	参数：1.钩子过程的类型 2.指向一个钩子过程的指针 3.钩子过程的句柄4.指示了一个与钩子过程相关的线程标识符
+	
+	HHOOK g_hKeyboard=NULL;//全局变量
+
+	g_hKeyboard=SetWindowsHookEx(WH_KEYBOARD,MouseProc,NULL,GetCurrentThreadId());//创建一个钩子并返回句柄
+
+	钩子过程:
+	LRESUL CALLBACK KeyboardProc(int nCode,WPARAM wParam,LPARAM lParam )
+	{
+		if(VK_SPACE=wParam)
+		{
+			return 1;//如果是空格键则屏蔽掉
+		}
+		else
+		{
+			return CallNextHookEx(g_hKeyboard，code,wParam,lParam);//如果不是则将消息传递给下一个钩子过程
+		}
+		
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,243 @@
+1.指向常量的指针：指针指向的对象是常量，对象的值不能改变，但是指针的值可以改变(即可以指向其它的对象）
+  	char ch[5]="lisi"; //定义了一个字符串常量，它需要比字符个数多一个空间用于存放\0
+	const char* pStr=ch;//定义一个指向常量的指针，来指向刚才定义的字符串
+	*pStr='W';//这是错误的，不能修改对象的值
+	pStr="wangwu";//这是可以的，它修改了指针的值，即指向了另一个常量
+  指针常量：指针指向的对象不能改变，也就是指针的值(即对象的地址)不能改变
+	char ch[5]="lisi";
+	char * const pStr=ch;//注意const是在*号后面，变量名前面，即定义了一个指针常量
+			     //常量指针在定义时必须初始化
+	pStr="zhangsan";//这是错误的，指针常量不能改变自己的值，它只能指向一个对象
+	*pStr='W';//这是可以的，因为指针常量可以修改指向对象的值
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+C语言文件操作
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2.文件操作
+	读写文件的时候系统会为每个文件分配一个缓冲区，每次读写文件会先将数据读写到缓冲区中，等到缓冲区充满之后才会读写到磁盘或内存中
+	FILE *pFile=fopen("1.txt","w");//以写的方式打开1.txt
+	fwrite("YOUCAIHUA",1,strlen("YOUCAIHUA"),pFile));//将YOUCAIHUA写入pFile文件指针所指向的文件
+	fseek(pFile,0,SEEK_SET);//移动文件指针到指定位置
+	fwrite("QIUQUCHUNLAI",1,strlen("QIUQUCHUNLAI"),pFile));//再次写入字符串，因为上一行代码将文件指针移动到文件的开头，所以现在写的字符会从文件的开头开始写
+	fflush(pFile);//刷新缓冲区
+	——————————————————————————	
+	FILE *pFile=fopen("1.txt","r");
+	char ch[100];//定义接收数据的Buffer
+	memset(ch,0,100);//用指定的字符填充所有数据,将所有数据填充为0方便程序读取文件，如果要读取的内容后面不为0则函数找不到结束位置就会显示乱码
+	fread(ch,1,100,pFile);//读取文件到buffer
+	MessageBox(ch);
+	fclose(pFile);
+	——————————————————————————
+	FILE *pFile=fopen("1.txt","r");
+	char* pBuf;//创建一个文件指针
+	fseek(pFile,0,SEEK_END);//将文件指针移动到文件结束位置
+	int len=ftell(pFile);//ftell函数用于返回当前指针位置，因为上一行代码将其移动到末尾，所以它就会返回文件的长度，便可以此来定义缓冲区来存放整个文件
+	pBuf=new char(len+1);//定义缓冲区来存放文件内容，多定一个字节是用于存放文件结束标志0
+	rewind(pFile);//将文件指针移动到文件的开始位置，因为下面将对文件进行读写，如果不将文件指针移动大开始位置，那么就没有文件可读了
+	fread(pBuf,1,len,pFile);
+	pBuf[len]=0;//将缓冲区的最后一位指针为0，这里不是用len+1，而是用len，这是因为数组是从0开始计数的，所以这里的len就是最后一个字节
+	MessageBox(pBuf);
+	fclose(pFile);
+	——————————————————————————
+
+3.文件可分为二进制文件和文本文件
+
+	当我们安装文本方式往文件中写入数据时，一旦遇到换行字符(ASCII为10)，则会转换为回车-换行(ASCII为13，10)。在读文件时，一旦遇到回车-换行
+	(即连续的ASCII 13，10)，则会转换为换行字符（ASCII为13，10）
+
+	当我们按照二进制方式往内存中写入数据时，则将数据在内存中的形式原样输出到文件
+	
+	注意：当以文本方式写入的数据以二进制方式读取时就会出现多了一些字节
+	      所以我们在读取文件和写入文件的时候就需要注意了，因为文本方式和二进制方式在读取文件时的差异，所以我们在读取和写入文件的时候要保持
+	      一致
+	
+	例子：将整数98341写入到文件，然后用记事本打开它，显示的也是98341
+	分析：写入的时候系统将整数98341转换为16进制存放在，然后以文本方式写入文件，这时系统会将以ASCII码将文件转换字符，这时如果用文本方式打开的
+	      话，就会显示乱码，所以在写入它们的时候就应该先将他们转换为字符形式，再写入文件。
+	File *pFile=open("3.txt","w");
+	int i=98341;
+	char ch[5];
+	itoa(i,ch,10);//将整形i以10进制转换后放入ch中
+	fwrite(ch,1,5,fFile);
+	fclose(pFile);
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+C++文件操作
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+4.文件操作
+	包含头文件 #include <fstream.h>
+
+	写入文件：ofstream类
+	ofstream ofs("4.txt");
+	ofs.write("YOUCAIHUA",strlen("YOUCAIHUA"));
+	ofs.close();
+
+	读取文件：ifstream类
+	ifstream ifs(4.txt);
+	char ch[100];
+	memset(ch,0,100);
+	ifs.read(ch,100);
+	ifs.close();
+	MessageBox(ch);
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+API文件操作
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+5.文件操作
+	函数:CreateFile(文件名，访问方式，共享方式，NULL,如何创建，属性标记，句柄);
+	     WriteFile(文件句柄，指向buffer的指针，写入字节，实际写入数，NULL);
+	     ReadFile();
+
+	HANDLE hFile;//API文件操作使用句柄进行
+	hFile=CreateFile("5.txt",GENERIC_WRITE,0,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);//打开一个文件并返回句柄
+	DWORD dwWrites;//用于接收实际写入的字节数
+	WriteFile(hFile,"YOUCAIHUA",strlen("YOUCAIHUA"),&dwWrites,NULL);//写入内容
+	CloseHandle(hFile);
+
+	HANDLE hFile;
+	hFile=CreateFile("5.txt",GENERIC_READ,0,NULL,OPEN_EXISING,FILE_ATTRIBUTE_NORMAL,NULL);
+	char ch[100];//用于接收读入的数据
+	DWORD dwReads;//用于接收读入的实际字节数
+	ReadFile(hFile,ch,100,&dwReads,NULL);// 读入数据
+	ch[dwReads]=0;//将数组的最后一个字节设为0，作为文件结束标志
+	CloseHandle(hFile);
+	MessageBox(ch);
+	
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+MFC文件操作
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+6.	CFile 文件操作类
+
+	CFile file("6.txt",CFile::modeCreate | CFile::modeWrite);
+	file.Write("YOUCAIHUA",strlen("YOUCAIHUA"));
+	file.Close();
+	
+	CFile file("6.txt",CFile::modeRead);
+	char *pBuf;
+	DWORD dwFileLen;
+	dwFileLen=file.GetLength();
+	pBuf=new char[dwFileLen+1];
+	pBuf[dwFileLen]=0;	
+	file.Read(pBuf,dwFileLen);
+	file.Close();
+	MessageBox(pBuf);
+
+7.打开保存对话框
+	CFileDialog类
+	
+	保存对话框：
+	CFileDialog fileDlg(FALSE);//创建一个保存对话框对象
+	fileDlg.m_ofn.lpstrTitle="YOUCAIHUA";//修改对话框的标题
+	fileDlg.m_ofn.lostrFilter="Text Files(*.txt)\0*.txt\0All Files(*.*\0*.*\0\0)";//增减过滤器
+	file.m_ofn.lpstrDefExt="txt";// 设置默认保存文件的格式
+	if(IDOK==fileDlg.DoModal())
+	{
+		CFile file(fileDlg.GetFileName(),CFile::modeCreate | CFile::modeWrite);
+		file.Write("YOUCAIHUA",strlen("YOUCAIHUA"));
+		file.Close();
+	}
+	
+	打开对话框:
+	CFileDialog fileDlg(TRUE);//创建一个打开对话框对象
+	fileDlg.m_ofn.lpstrTitle="YOUCAIHUA";//修改对话框的标题
+	fileDlg.m_ofn.lpstrFilter="Text Files(*.txt)\0*.txt\0All Files(*.*\0*.*\0\0)";//增减过滤器
+
+	if(IDOK==fileDlg.DoModal())
+	{
+		CFile file(fileDlg.GetFileName(),CFile::modeRead);
+		char *pBuf;
+		DWORD dwFileLen;
+		dwFileLen=file.GetLength();
+		pBuf=new char[dwFileLen+1];
+		pBuf[dwFileLen]=0;	
+		file.Read(pBuf,dwFileLen);
+		file.Close();
+		MessageBox(pBuf);
+	}
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+8.win.ini操作  API函数
+	::WriteProfileString();
+	::GetProfileString();
+	
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+9注册表的编程
+	值：值的名称，值的类型，值本身
+	函数:RegCreateKey();//创建注册表项，如果已有则打开
+	     RegSetCalue();//设置键值
+	     RegQueryValue();//从注册表中获取数据
+
+	写入数据：
+	HKEY hKey;//注册表对象
+	RegCreateKey(HKEY_LOCAL_MACHINE,"software\\YOUCAIHUA\\admin",&hKey);//创建一个注册表项
+	RegSetCalue(hKey,NULL,REG_SZ,"QIUQUCHUNLAI",strlen("qiuquchunlai"));//设置注册表项的值
+	RegCloseKey(hKey);//关闭注册表对象
+	
+	获取数据：
+	LONG iValue;//用于保存注册表值的长度
+	RegQueryValue(HKEY_LOCAL_MACHINE,"software\\YOUCAIHUA\\admin",NULL,&iValue);//第一次调用该函数，将第三个参数设为NULL则第四个参数将返回键值的长度
+	char *pBuf=new char[iValue];//根据第一调用RegQueryValue函数返回的值的长度动态分配内存用于存放获取的键值
+	RegQueryValue(HKEY_LOCAL_MACHINE,"software\\YOUCAIHUA\\admin",pBuf,&iValue);//再次调用RegQueryValue函数，这次将第三个参数设置接收数据的Buffer
+	MessageBox(pBuf);
+	
+	---------以上函数都是存放或者获取字符串，下面的函数可存取其它数据类型
+	
+	写入其它数据类型到注册表：
+	HKEY hKey;//注册表对象
+	DWORD dwAge=30;
+	RegCreateKey(HKEY_LOCAL_MACHINE,"software\\YOUCAIHUA\\admin",&hKey);//创建一个注册表项
+	RegSetCalue(hKey,NULL,REG_SZ,"QIUQUCHUNLAI",strlen("qiuquchunlai"));//设置注册表项的值
+	RegSetValueEx(hKey,"age",0,REG_DWORD,(CONST BYTE*)&dwAge,4);//使用此函数再设置整形的值，第四个参数设定写入的值的类型
+	RegCloseKey(hKey);//关闭注册表对象
+	
+	读取其它数据类型到注册表：
+	HKEY hKey;
+	RegOpenKey(HKEY_LOCAL_MACHINE,"software\\YOUCAIHUA\\admin",&hKey);//打开注册表项
+	DWORD dwType;
+	DWORD dwValue;
+	DWORD dwAge;
+	RegQueryValueEx(hKey,"age",0，&dwType,(LPBYTE)&dwAge,&dwValue);//读取键值
+	CString str;
+	str.Format("age=%d",dwAge);//格式化获取的值
+	MessageBox(str);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

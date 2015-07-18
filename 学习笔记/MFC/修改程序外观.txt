@@ -1,0 +1,175 @@
+1.修改窗口的大小和标题内容
+	
+	想要改变一个框架窗口的外观和大小，我们应该在CMainFrame类中的PreCreateWindow函数中进行
+	修改cs结构体的值：
+	cs.cx=300;
+	cs.cy=200;//修改窗口大小
+	
+	cs.style&=~FWS_ADDTOTITLE; //FWS_ADDTOTITLE标记指示MFC按照文档标题作为程序的标题，如果我们需要自己定义标题，需要将此标记取消
+	//cs.style=WS_OVERLAPPEDWINDOW;//通过直接给style重新赋值也可去掉FWS_ADDTOTITLE标记
+	cs.lpszname="油菜花";      //修改窗口标题
+	
+2.在窗口创建之后修改外观
+	函数:SetWindowLong()//可以改变指定窗口的属性
+	     GetWindowLong()//可以获取指定窗口的信息
+	在窗口创建完成之后改变外观可以在OnCreate函数中添加代码
+	SetWindowLong(m_hWnd,GWL_STYLE,WS_OVERLAPPEDWINDOW);//去除文档标题
+
+	SetWindowLong(m_hWnd,GWL_STYLE,GetWindowLong(m_hWnd,GWL_STYLE)&~WS_MAXIMIZEBOX;//先获取窗口信息并将它与最大化标记相与，即去掉最大化按钮，然后
+											//在通过SetWindowLong设置新的窗口属性
+3.修改图标、光标、背景
+
+    在窗口创建之后修改图标、光标、背景：
+   
+  一.	 第一中麻烦的方法：重写窗口类
+    	在框架类的PreCreateWindow()函数中编写一个自己的窗口类
+	注意：在框架类中只能修改窗口类的图标，因为框架类被视类覆盖，所以在框架类中对它的修改会被视类覆盖从而不会显示，需要修改背景和光标需要在视类中修改
+	WNDCLASS wndcls;
+	wndcls.cbClsExtra=0;
+	wndcls.cvWndExtra=0;
+	wndcls.hbrBackGround=(HBRUSH)GetStockObject(BLACK_BRUSH);
+	wndcls.hCursor=LoadCursor(NULL,IDC_HELP);
+	wndcls.hIcon=LoadIcon(NULL,IDI_ERROR);
+	wndcls.hInstance=AfxGetInstanceHandle();//返回应用程序当前的一个实例句柄
+	wndcls.lpfnWndProc=::DefWindowProc;//该函数在CWnd类中有重名，所以需要显示调用API函数
+	wndcls.lpszClassName="YOUCAIHUA";
+	wndcls.lpszMenuName=NULL;
+	wndcls.style=CS_HREDRAW | CS_VREDRAW//这里是窗口类的风格，不是窗口的风格
+
+	RegisterClass(&wndcls);//注册窗口类
+	cs.lpszClass="YOUCAIHUA";//将窗口类的名字改为自己创建的窗口类的名字
+	
+   	在视类中的PreCreateWindow()函数中
+	cs.lpszClass="YOUCAIHUA";//因为YOUCAIHUA类已经在框架类中注册了，这里只需要修改视类窗口的创建类名就行了，如果没有注册，也可在这里重新注册一个新的窗口类	
+	
+   二.  第二种简单的方法：AfxRegisterWndClass(UINT nClassStyle,HCURSOR,HBRUSH,HICON);//返回注册之后的类名，可修改图标、背景、光标
+	注意：如果该函数光标设为默认则是一个箭头光标，如果背景设置为默认则是一个NULL的背景画刷（此处的NULL即为透明），如果图标设置为默认则是一个Windows的图标
+	在主框架类PreCreateWindow()中：
+	cs.lpszClass=AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW,0,0,LoadIcon(NULL,IDI)WARNING));//因为在框架类中修改背景和光标没有意义，所以只修改图标
+	//将函数返回的新注册的类名赋给窗口类的类名
+	在视类PreCreateWindow()函数中：
+	cs.lpszClass=AfxRegisterWndClass(CS_HREDRAW | CS_VREDRAW,LoadCursor(NULL,IDC_CROSS),(HBRUSH)GetStockObject(BLACK_BRUSH),0);
+	
+
+
+   在窗口创建之后修改图标、光标、背景：
+	函数：SetClassLong(HWND,int ,LONG);//用来改变WNDCLASSEX这个结构体中的值
+	在框架类的OnCreate()函数中添加代码
+	SetClassLong(m_hWnd,GCL_HICON,(LONG)LoadIcon(NULL,IDI_ERROR),);//第二个参数用于设置需要修改的地方，如果光标、图标、背景等
+	在视类的OnCreate()函数中添加代码（没有就添加一个）
+	SetClassLong(m_hWnd,GCL_HBRBACKGROUND,(LONG)GetStockObject(BLACK_BRUSH));
+	SetClassLong(m_hWnd,GCL_HCURSOR,(LONG)LoadIcon(NULL,IDC_HELP));
+
+
+4.不断变化的图标:
+	自定义图标：
+	在框架类的OnCreate()函数中
+	m_hIcon[0]=LoadIcon(AfxGetInstanceHandle(),MAKEINTRESOURCE(IDC_ICON1));	//第一个参数是实例句柄
+	m_hIcon[1]=LoadIcon(theApp.m_hInstance,MAKEINTRESOURCE(IDC_ICON2));//通过全局对象获取实例句柄
+	m_hIcon[2]=LoadIcon(AfxGetApp()->m_hInstance,MAKEINTRESOURCE(IDC_ICON3));//另一种获取实例句柄的方法
+	SetClassLong(m_hWnd,GCL_HICON,(LONG)m_hIcon[0]);//将图标设为第一副位图
+	SetTimer(1,1000,NULL);
+	在框架类OnTimer函数中
+	static int index=1;//因为已经设置了第一副图标，所以这里从第二幅开始循环
+	SetClassLong(m_hWnd,GCL_HICON,(LONG)m_hIcon[index]);//修改图标
+	index=++index%3;
+
+5.创建工具栏
+	先在资源视图中创建一个新的工具栏，然后在框架类中定义一个CToolBar的对象，然后在框架类的OnCreate函数中已经创建了一个工具栏，将它的代码拷贝一份放置在函数末尾，
+	然后将变量改为自己定义的CToolBar对象
+	
+
+6.状态栏 CStatusBar类
+	它也是在CMainFrame类中定义的，在框架类中有数据成员CStatusBar类的对象m_wndStatusBar.它就是一个状态栏对象
+
+7.进度栏 CprogressCtrl类
+	定义一个CprogressCtrl类变量，然后在OnCreate函数发送一个自定义消息，在该消息的处理函数中调用成员函数Create创建一个进度栏
+	为什么不在OnCreate函数中直接创建呢，这是因为OnCreate函数响应WM_CREATE消息，在该函数中还没有完成对状态栏中的一些子窗口的创建，
+	如右下角的显示状态的小窗口，这时如果将一个进度栏设置在这些窗口上时，是不能获取这些窗口的位置的，因为它们还没创建完成，所以需要
+	在它们完成之后再来创建进度栏。
+	
+	//SendMessage(UM_PROGRESS);//这里发送消息不能用SendMessage`，因为它是异步调用，程序必须在消息处理完成之后才能执行下面的代码
+	PostMessage(UM_PROGRESS);//PostMessage是同步调用，它立即返回，在发出消息之后，系统将该消息放到消息队列后面，然后继续执行下面的代码，
+				//只有当前面的消息处理完成之后才会处理UM_PROGRESS消息，所以在处理该消息时，框架窗口已经创建完成了
+
+	定义自定义消息：
+	1.在CMainFrame头文件中:  #define  UM_PRIGRESS   WM_USER+1  //WM是Windows使用的消息，用户使用UM开头的消息，WM_USER以下的值是Windows保留
+	  的，用户自定义的消息需要大于这个值
+	2.在CMainFrame头文件中:定义函数原型：
+	   afx_msg void OnProgress();	
+	3.消息映射：在CMainFrame类的源文件中：
+	   ON_MESSAGE(UM_PRIGRESS,OnProgress)
+	4.函数定义：void CMainFrame::OnProgress()
+		    {
+			CRect rect;
+			m_wndStatusBar.GetItemRect(2,&rect);//该变量是状态栏对象，用于获取第二个状态框的位置
+			m_progress.Create(WS_CHILD | WS_VISIBLE ,rect,&m_wndStatusBar,123);//该变量是一个进度条对象，将该进度条覆盖在从上面获取的子窗口上面
+			m_progress.SetPos(50);//设置进度条的进度为50
+		     }
+	另一种方法：上面的方法如果在窗口尺寸变化时会出现错误，因为当窗口变化时，状态栏上的子窗口位置就会发送变化，而进度栏却不知道发送了变化，所以会出息错误
+	简便方法：在CMainFrame类中添加WM_PAINT消息响应处理主窗口重绘
+	void CMainFrame::OnPaint()
+	{
+		CRect rect;
+		m_wndStatusBar.GetItemRect(2,&rect);//该变量是状态栏对象，用于获取第二个状态框的位置
+		if(!m_progress.m_hWnd)//如果先前没有创建该进度栏则创建一个
+			m_progress.Create(WS_CHILD | WS_VISIBLE ,rect,&m_wndStatusBar,123);//该变量是一个进度条对象，将该进度条覆盖在从上面获取的子窗口上面
+		else//如果已经创建了进度栏，则现在只是需要改变它的位置
+			m_progress.MoveWindow(rect);
+		m_progress.SetPos(50);//设置进度条的进度为50
+	}//在Paint函数中完成创建和定位进度栏，在每次窗口重绘时都能找到正确的位置
+
+8.启动画面
+	Project->Add To Project->Comgonents and Contrels->Visual C++ Componets-Splash Screen插入
+	添加启动画面后会在CMainFrame中的OnCreate函数中添加一句代码：CSplashWnd::ShowSplashScreen(this);
+	插入之后就会在位图中多了一副启动画面的位图
+	类列表中多了一个CSplashWnd类，它是一个启动画面类
+	增长启动画面的停留时间：在OnCreate函数中修改计时器时间就可以了
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

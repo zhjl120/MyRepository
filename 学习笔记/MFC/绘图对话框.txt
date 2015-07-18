@@ -1,0 +1,161 @@
+1.绘图操作
+	m_nDrawPixel用于记录用户选择的是点、线、矩形还是椭圆
+	m_ptOrigin用于记录鼠标按下坐标
+	CClientDC dc(this);
+	CPen pen(PS_SOLD,1,RGB(255,0,0));
+	dc.SelectObject(&pen)
+	CBrush *pBrush=CBrush::FromHandle((HBRUSH)GetStockObject(NULL_BRUSH));
+	dc.SelectObject(pBrush);
+	switch(m_nDrawType)
+	{
+	case 1:
+		dc.SetPixel(point,RGB(255,0,0));
+		break;
+	case 2:
+		dc.MoveTo(m_ptOrigin);
+		dc.LineTo(point);
+	case 3:
+		dc.Rectangle(CRect(m_ptOrigin,point));
+		break;
+	case 4:
+		dc.Ellipse(CRect(m_ptOrigin,point));
+		break;
+	}
+
+2.颜色对话框类：CColorDialog
+	CColorDialog dlg;//创建一个颜色对话框类对象
+	dlg.m_cc.Flags |= CC_RGBINIT;//该Flags标志用于设置对话框初始化标志，如果需要自己设置对话框的初始颜色，就需要加上CC_RGBINIT标记
+	dlg.m_cc.rgbResult=m_clr;//将用户先前的选择设置在颜色对话框上
+	if(dlg.DoModal()==IDOK)//如果用户选择颜色后点击确定
+	{
+		m_clr=dlg.m_cc.rgbResult;//m_clr用于保存用户选择，在颜色对话框中选择的颜色保留在m_cc结构体中的rgbResult中
+	}
+	
+3.字体对话框类：CFontDialog类
+	CFontDialog dlg;
+	if(IDOK==dlg.DoModal())
+	{	
+		if(m_font.m_hObject)//判断字体对象是否已经和一个资源关联
+			m_font.DeleteObject();//如果已经关联则删除它
+		m_font.CreateFontIndirect(dlg.m_cf.lpLongFont);//创建一个字体
+		m_strFontName=dlg.m_cf.lpLogFont->lfFaceName//获取字体的名称
+		Invalidate();
+	}
+
+
+4.当用户在编辑框中对文本进行改变的时候会发送EN_CHANGE消息
+  每个窗口都可以处理WM_PAINT消息，比如对话框，子控件，主框架窗口等
+	
+
+5.改变对话框上的背景色、控件背景色、控件文字颜色
+	消息：WM_CTLCOLOR  它的响应函数是：OnCtlColor();
+	在对话框中每一个控件的绘制都要发送一个WM_CTLCOLOR消息,所以OnCtlColor函数会被调用很多次
+	
+	OnCtlColor(CDC* pDC ,CWND pWnd,UINT nCtlColor)
+	{
+		if(pWnd->GetDlgCtrlID()==IDC_LINE_STYLE)//该函数用于返回当前绘制的控件的ID，以此就可以来区别当前绘制的是哪一个控件
+		{
+			pDC->SetTextColor(RGB(255,0,0));//更改控件文本颜色
+			pDC->SetBkMode(TRANSPARENT);//更改文字的背景色
+			return m_brush;//然后通过自定义的画刷来绘制该控件
+		}
+		if(pWnd->GetDlgCtrlID()==IDC_LINE_WIDTH)//更改编辑框文本颜色、背景颜色
+		{
+			pDC->SetTextColor(RGB(255,0,0));//更改控件文本颜色
+			pDC->SetBkColor(RGB(0,0,255));//设置背景颜色，这里不能使用SetBkMode()来设置
+			return m_brush;//然后通过自定义的画刷来绘制该控件
+		 }
+		 if(pWnd->GetDlgCtrlID()==IDC_TEXT)//改变文字的字体
+		 {
+			pDC->SelectObject(&m_font);//这里的m_font是成员变量，是自定义的字体	
+		 ｝
+		return hbr;//如果不是自己感兴趣的控件则使用默认的画刷来绘制它
+	}
+
+
+6.在窗口显示一副位图
+
+	显示位图函数：StretchBlt()  BitBlt();
+
+	第一步：创建位图
+	CBitmap bitmap;
+	bitmap.LoadBitmap(IDB_BITMAP1);
+	第二步：创建兼容DC
+	CDC dcCompatible;
+	dcCompatible.CreateCompatibleDC(pDC);//参数是需要兼容的DC
+	第三步：将位图选到兼容DC
+	dcCompatible.SelectObject(&bitmap);
+	第四步:将兼容DC中的位图贴到当前DC中
+	pDC->BitBlt(rect.left,rect.top,rect.Width(),rect.Height(),&dcCompatible,0,0,SRCCOPY);
+		
+	|
+	|
+        V  显示可放在下面函数中
+
+	窗口重绘	
+	过程：先擦出窗口背景，然后再重新绘制
+	在擦除窗口背景的时候会发送WM_ERASEBKGND消息
+	OnEreaseBkgnd(CDC* pDC)
+	{
+		CBitmap bitmap;
+		bitmap.LoadBitmap(IDB_BITMAP1);
+
+		BITMAP bmp;
+		bitmap.GetBitmap(&bmp);//获取位图的信息，主要是位图的宽和高
+
+		CDC dcCompatible;
+		dcCompatible.CreateCompatibleDC(pDC);
+
+		dcCompatible.SelectObject(&bitmap);
+
+		CRect rect;
+		GetClientRect(&rect);//获取客户区的大小
+		
+		//pDC->BitBlt(0,0,rect.Width(),rect.Height(),&dcCompatible,0,0,SRCCOPY);//BitBlt函数是以1：1的比例来显示位图的
+		pDC->StretchBlt(0,0,rect.Width(),rect.Height(),&dcCompatible,0,0,bmp.bmWidth,bmp.bmHeightSRCCOPY);//此函数比BitBlt函数多了倒数第三个和第二个参数，它们用来指定
+														//需要显示位图的大小（宽和高）,此函数可以收缩和扩张位图，而BitBlt函数则不能		
+														//它是以1：1的比例来显示的
+		//return CView::OnEreaseBkgnd(pDC);//将它的返回值注释掉，如果不注释则它调用基类的此函数，在这里显示位图后又会被基类的此函数覆盖
+		return  true;
+	}
+	此段代码也可放在OnDraw函数中，如果放在OnDraw函数中每次窗口重绘都会把位图重新贴一次，但是如果放在OnEreaseBkgnd函数中，它只是在窗口擦除时用位图来擦除(速度更快)
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

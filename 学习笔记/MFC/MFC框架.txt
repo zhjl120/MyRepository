@@ -1,0 +1,23 @@
+cWinApp  应用程序类(CxxxApp类)
+
+CxxxApp theApp应用程序对象，每个程序有且仅有一个此对象。它代表了程序本身。
+
+MFC执行流程:全局对象theApp->CwinApp构造函数->CtestApp(构造函数)->_tWinMain->(InitInstance调用后面的函数)-> AfxWinMain -> 注册窗口类
+对于全局对象在mian函数运行之前就已经初始化并分配好了内存空间，如果全局对象是一个类对象，则先执行类的构造函数，然后程序再进入main函数。
+
+CMainFrame（框架窗口类）
+流程：注册窗口类（单文档程序在CWinApp中注册）->创建窗口类
+
+CxxxApp：m_pMainWnd显示窗口，更新窗口
+CWinThread::Run 消息循环
+
+MFC将程序的数据本身与它的显示分离开来，分别用视类和文档类来管理。
+CxxxView（子窗口类，视类）作用：数据的显示和修改；
+CxxxDoc  (CDocument文档类）作用：数据的存储与加载；
+
+在框架窗口OnCreate（）中添加菜单栏按钮
+在视类中添加WM_CREATE消息完成添加按钮
+
+函数:m_btn.Create("标题"，WS_CHILD | WS_VISIBLE | BS_AUTO3STATE,CRect(0,0,100,100),this,123);
+
+类是抽象的，一个对象是对类的一个实例，一个对象可以创建多个窗口，窗口消亡不代表对象消亡，但对象消亡窗口一定会消亡。

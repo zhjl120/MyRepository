@@ -1,0 +1,175 @@
+1.基于消息的异步套接字
+
+	WSAAsyncSelect();//异步选择函数，它自动设置套接字为非阻塞模式
+	参数：1.套接字 2.网络事件发生时，接收消息的窗口句柄 3.网络事件发生时窗口接收的消息(自定义消息) 4.应用程序感兴趣的位掩码，即感兴趣的网络事件
+	它提供了消息机制的网络事件选择，当使用它登记的网络事件发生时，Windows应用程序的窗口函数将收到一个消息，消息中指示了发生的网络事件，以及与事件相关的一些信息。
+
+	WSAEnumProtocols();//获取系统中安装的网络协议的相关信息
+
+
+2.采用异步套接字编写网络聊天室(MFC)
+   
+     一.在StdAfx.h中包含头文件#include<winsock2.h>  ,链接库 ws2_32.lib
+
+     二.CChatApp类InitInstance函数中加载协议栈：
+	
+	WORD wVersion;
+	WSADATA wsaData;
+	int err;
+	wVersion=MAKEWORD(2,2);
+	err=WSAStartup(wVersion,&wsaData);
+	if(err!=0)
+	{
+		return FALSE;
+	}
+	if(LOBYTE(wsaData.wVersion)!=2 | HIBYTE(wsaData.wVersion)!2)
+	{
+		WSACleanup();
+		return FALSE;
+	}
+     三.增减析构函数
+	CChatApp::~CChatApp()
+	{
+		WSACleanup();
+	}
+     四.在CChatDlg类中定义变量SOCKET m_socket，并增减析构函数
+	CChatDlg::~CChatDlg()
+	{
+		if(m_socket)
+			closesocket(m_socket);
+	}
+     五.增减一个成员函数做套接字的初始化，并在CChatDlg::OnInitDialog()函数中调用它
+	BOOL CChatDlg::InitSocket()
+	{
+		m_socket=WSASocket(AF_INET,SOCK_DGRAM,0,NULL,0,0);
+		if(INVALID_SOCKET==m_socket)
+		{
+			MessageBox("创建套接字失败");
+			return FALSE;
+		}
+		SOCKADDR_IN addrSock;
+		addrSock.sin_addr.S_un.S_addr=htonl(INADDR_ANY);
+		addrSock.sin_family=AF_INEF;
+		addrSock.port=htons(6000);
+
+		if(SOCKET_ERROR==bind(m_socket,(SOCKADDR*)&addrSock,sizeof(SOCKADDR)))
+		{
+			MessageBox("绑定失败");
+			return FALSE;
+		}
+=====>>>	if(SOCKET_ERROR==WSAAsyncSelect(m_socket,m_hWnd,UM_SOCK,FD_READ))//这里对网络读取事件感兴趣，如果在套接字m_sock上有数据到来，程序将发送一个UM_SOCK消息到m_hWnd所标识的窗口过程，
+		{								//自定义消息参看前章
+			MesaageBox("注册网络读取事件失败");
+			return FALSE;
+		}
+		return TRUE;
+	}
+			 
+      六.消息响应函数
+	void CChatDlg::OnSock(WPARAM wParam,LPARAM lParam)
+	{
+		switch(LOWORD(lParam))//虽然在异步选择函数中我们只对读取事件感兴趣，但它也可以对其它事件感兴趣，在这里判断一下养成良好的编码风格
+		{		      //在lParam参数中高字位保存了消息的错误代码，底字位保存了消息的类型，可用LOWORD宏来取出参数的底字位段
+		case FD_READ:	
+			WSABUF wsabuf;//定义WSABUF结构体用于接收数据的函数
+			wsabuf.buf=new char[200];//分配内容用于接收数据
+			wsabuf.len=200;//定义缓冲区长度
+			DWORD dwRead;
+			DWORD dwFlag=0;
+			SCOKADDR_IN addrFrom;//用于保存发送数据主机的IP
+			int len=sizeof(SOCKADDR);
+			CString str,strTemp;
+			if(SOCKET_ERROR==WSARecvFrom(m_socket,&wsabuf,1,&dwRead,&dwFlag,(SOCKADDR*)&addrFrom,&len,NULL,NULL))//接收数据
+			{
+				MessageBox("接收数据失败");
+				return ;
+			}
+			str.Format("%s说:%s",inet_ntoa(addrFrom.sin_addr),wsabuf.buf);
+			str+="\r\n";
+			GetDlgItemText(IDC_EDIT_RECV,strTemp);
+			str+=strTemp;
+			SetDlgItemText(IDC_EDIT_RECV,str);
+			break;
+			
+		}
+	}
+
+     七.发送端
+
+	DWORD dwIP
+	CString strSend;
+	WSABUF wsabuf;
+	DWORD dwSend;
+	int len;
+	((CIPAddressCtrl*)GetDlgItem(IDC_IPADDRESS1))->GetAddress(dwIP);//获取IP控件内容
+
+	SOCKADDR_IN addrTo;
+	addrTo.sin_addr.S_un.S_addr=htonl(dwIP);
+	addrTo.sin_family=AF_INEF;
+	addrTo.port=htons(6000);
+	
+	GetDlgItemText(IDC_EDIT_SEND,strSend);//获取发送编辑框内的内容
+	len=strSend.GetLength();
+	wsabuf.buf=strSend.GetBuffer(len);//将发送编辑框中的内容存放到发送缓冲区中
+	wsabuf.len=len+1;//以发送的内容长度来定义发送缓冲区的长度
+	
+	SetDlgItemText(IDC_EDIT_SEND,"");//设置发送编辑框内容为空
+
+	if(SOCKET_ERROR==WSASendTo(m_socket,&wsabuf,1,&dwSen,0,(SOCKADDR*)&addrTo,sizeof(SOCKADDR),NULL,NULL))//发送数据
+	{
+		MessageBox("发送数据失败");
+		return ;
+	}
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	

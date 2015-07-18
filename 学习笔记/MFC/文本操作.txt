@@ -1,0 +1,125 @@
+1.插入符:
+	函数：CreateSolidCaret(插入符宽度，高度);
+	在视类中添加消息处理WM_CREATE
+	CClientDC dc(this);
+	TEXTMETRIC tm;
+	dc.GetTextMetrics(&tm);//获取当前字体的信息
+	CreateSolidCaret(tm.tmAveCharWidth/8，tm.tmHeight);//创建时是隐藏的
+	ShowCaret();//显示插入符
+
+2.图形插入符
+	函数:CreateCaret(CBitmap* pbitmap);//接收一个位图对象
+	声明为视类的成员变量：CBitmap bitmap;//如果放在OnCreate函数中它就会在函数返回时清除对象
+	CClientDC dc(this);
+	bitmap.LoadBitmap(IDB_BITMAP1);
+	CreateCaret(&bitmap);
+	ShowCaret();
+
+3.输出文字
+	OnDraw(重绘)函数响应WM_PAINT消息
+	CString str("油菜花");
+	pDC->TextOut(50,50,str);//OnDraw函数自带有dc参数，可直接使用，TextOut函数是封装在CDC类中的，此处不是API函数,TextOut(输出坐标，字符串)
+	str.LoadString(IDS_YOUCAIHUA);//在资源视图中添加一个字符串并设置ID号，然后通过该函数加载进去
+	pDC->TextOut(0,200,str);
+	
+4.路径层
+	函数:BeginPath()//打开一个路径层
+	     EndPath()//关闭一个路径层
+	CString str("油菜花");
+	CSize size=pDC->GetTextExtent(str)//返回字符串的高度和宽度
+	pDC->BeginPath(); //此路径层用于把一个字符串用矩形框起来，所以需要获取字符串的左上角坐标和右下角坐标
+	pDC->Rectangle(50,50,50+size.cx,50+size.cy);
+	pDC->EndPath();
+	SelectCliPath(RGN_DIFF);//将我们的路径层和当前的剪切区域（一个绘图的区域）按照一种指定的模式进行互操作
+	for(int i=0;i<300;i+=10)//画一个网格覆盖文字
+	{
+	    pDC->MoveTo(0,i);
+	    pDC->LineTo(300,i);
+	    pDC->MoveTo(i,0);
+	    pDC->LineTo(i,300);
+	}
+5.字符输入功能
+	在视类中添加WM_CHAR消息处理函数，再加一个CString对象用于存储输入文字，并在构造函数中初始化为空
+	再添加WM_LButtonDown消息用于设置插入符的位置
+   一.OnLButton()函数中：
+	SetCaretPos(point);//设置插入符位置
+	m_strLine.Empty();//清空字符串，因为当鼠标点击另一个地方输入时则前一个输入的字符串应该被删除
+	m_ptOrgin=point;//用于在输出时设置字符串坐标
+   二.OnChar函数中：
+	CClientDC dc(this);
+	CFont font;
+	font.CreatePointFont(300,"华文行楷",NULL);//创建字体
+	CFont *pOldFont=dc.SelectObject(&font);//将字体选进设备描述表
+	TEXTMETRIC tm;
+	dc.GetTextMetrics(&tm);
+	if(0x0d==nChar)//处理回车键
+	{
+	   m_strLine.Empty();//如果回车，则清空字符串
+	   m_ptOrgin.y+=tm.tmHeight  //并将字符串的输出坐标换到下一行，即当前Y坐标加上字体高度
+	}
+	else if(0x08==nChar)//处理退格键
+	{
+	   COLORREF clr=dc.SetTextColor(GetBkColor());//设置文本颜色为背景色
+	   dc.TextOut(m_ptOrigin,.x,m_ptOrigin.y,m_strLine);//此时已看不见文字了
+	   m_strLine=m_strLine.Left(m_strLine.GetLength()-1);//将字符串减去一个字符
+	   dc.SetTextColor(clr);
+	}
+	else
+        {
+           m_strLine+=nChar;//如果是正常输入字符，则将字符加到字符串后面
+	}
+	CSize sz=dc.GetTextExtent(m_strLine);
+	CPoint pt;
+	pt.x=m_ptRigin.x+sz.cx;//设置插入符随字符的增减变换位置
+	pt.y=m_ptRigin.y;
+	SetCaretPos(pt);
+	dc.TextOut(s_m_ptOrigin.x,s_m_ptOrigin.y,m_strLine);
+	dc.SelectObject(pOldFont);
+
+6.模拟卡拉OK字幕变色功能
+	 函数:DrawText();SetTimer();
+	 在视类中添加变量m_nWidth用以记录需要变色字符串的宽度，旭初始化为0
+   一.在OnCreate函数中:
+	SetTimer(1,100,NULL);//不一定要在此函数处设置，也可在其它地方设置
+	//如果第三个参赛设置为NULL，则程序处理WM_TIMER消息以响应计时器
+   二.在OnTimer函数中：
+	m_nWidth+=5;//字符串变色宽度每次加5
+	CClientDC dc(this);
+	TEXTMETRIC tm;
+	dc.GetTextMetrics(&tm);
+	CRect rect;
+	rect.left=0;
+	rect.top=200;
+	rect.right=m_nWidth;//设置DrawText的输出矩形坐标，左上角已知，右下角坐标为(m_nWidth,和左上角y加字体高度)
+	rect.bottom=rect.top+tm.tmHeight
+	dc.SetTextColor(RGB(255,0,0));
+	CString str;
+	str.LoadString(IDS_YOUCAIHUA);
+	dc.DrawText(str,rect,DT_LEFT);//在指定矩形内输入字符串，从左开始（还有其它模式可设置,如DT_RIGHT，DT_CENTER等）
+	CSize sz=dc.GetTextExtent(str);
+	if(m_nWidth>sz.cx)
+	{
+	   m_nWidth=0;
+	   dc.SetTextColor(RGB(0,255,0));
+	   dc.TextOut(0,200,str);
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	

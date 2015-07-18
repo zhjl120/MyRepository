@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=gb2312" />
+<title>CSS构造列表与导航</title>
+<style type="text/css">
+	body{
+		margin:50px;	
+	}
+	/*ul和li标签都是区块标签，可以使用inline属性将它们设置为内联*/
+	ul{ /*使列表紧靠左上角*/
+	/*	list-style-type:none;/*去掉列表前面的小圆点*/
+		margin:0;
+		padding:0;
+		line-height:150%;	
+		background:orange;
+		display:inline;
+	}
+	li{
+		padding-left:10px;
+		/*display:inline;*/	
+	}
+	ul li{
+		background-image:url(img/2.jpg) no-repeat center;
+		padding-left:20px;
+	}
+	#test1{
+		list-style-type:none;
+		padding:2px;
+		margin:5px;
+		background:orange;
+		font-size:12px;
+		width:3px;
+	}
+	/*垂直导航条样式*/
+	.class2{
+		background:#ddd;
+		margin:0px;
+		padding:2px 10px;
+		border-left:1px solid #fff;
+		border-top:1px solid #fff;
+		border-right:1px solid #66
+		border-bottom:1px solid #aaa;
+	}
+	
+</style>
+</head>
+<body>
+	
+	<ul>
+		<li>张三</li>
+		<li>李四</li>
+		<li>王五</li>
+		<li>赵六</li>	
+	</ul>
+	
+	<br /><br /><br /><br />
+	
+	<ul id="test1">
+		<li class="class2"><a href="#">垂直导航栏1</a></li>
+		<li class="class2"><a href="#">垂直导航栏2</a></li>
+		<li class="class2"><a href="#">垂直导航栏3</a></li>
+		<li class="class2"><a href="#">垂直导航栏4</a></li>
+	</ul>
+	
+</body>	
+</html>

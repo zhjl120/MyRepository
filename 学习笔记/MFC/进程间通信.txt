@@ -1,0 +1,356 @@
+1.剪贴板
+	OpenCliporad();//打开剪贴板
+	EemptyClipoard();//清空剪贴板，释放在剪贴板中数据的句柄，将剪贴板的所有权分配给调用该函数的进程
+	CloseClipoard();//关闭剪贴板
+	SetClipboardData();//以指定格式放置数据到剪贴板
+	
+	发送端：
+	先根据数据的大小分配一块内存区，然后将内存区句柄转换为字符指针，并将数据拷贝进内存区，最后将该内存区挂载到剪贴板上，然后关闭剪贴板
+	
+	if(OpenCliporad)//打开剪贴板
+	{
+		CString str;
+		HANDLE hClip;
+		cahr *pBuf;
+		EmptyClipoard();//清空剪贴板
+		GetDlgItemText(IDC_EDIT_SEND,str);//获取控件内容
+		hClip=GlobalAlloc(GMEN_MOVEEABLE,str.GetLength()+1);//分配内存空间
+		pBuf=(char*)GlobalLock(hClip);//将句柄转换为字符指针
+		strcpy(pBuf,str);//将数据拷贝到指向刚分配的内存空间中
+		GlobalUnlock(hClip);//解锁剪贴板
+		SetClipboardData(CF_TEXT,hClip);//设置剪贴板数据		
+		CloseClipboard();//关闭剪贴板
+	}
+
+	接收端：
+	判断剪贴板中是否有所需格式的数据，然后获取剪贴板数据，将数据指针转换为字符指针，最后将数据显示在控件上，然后关闭句柄
+	if(OpenCliporad)//打开剪贴板
+	{
+		if(IsClipboardFormatAvailable(CF_TEXT))//判断是否有所需格式的数据
+		{
+			HANDLE hClip;
+			char * pBuf;
+			hClip=GetClipboardData(CF_TEXT);//获取剪贴板数据
+			pBuf=(char*)GlobalLock(hClip);//将句柄转换为字符指针，此时pBuf就指向了数据所在的内存
+			GlobalUnlock(hClip);//解锁
+			SetDlgItemText(IDC_EDIT_RECV,pBuf);//将数据显示在控件上
+			CloseClipboard();//关闭剪贴板
+		}
+	}
+
+
+2.匿名管道
+
+	匿名管道只能在父子进程之间进行通信，当一个子进程从一个父进程得到一个匿名管道，那么子进程就可以通过它和父进程进行通讯了
+	CreatePipe();//创建一个匿名管道
+	
+-----------父进程-----------------------------------------------------------
+
+    一.	创建匿名管道：
+
+	增减两个成员变量：HANDLE hRead,hWrite
+	构造函数中将它们初始化为NULL；
+	析构函数中判断它们是否有值，如果有调用CloseHandle();
+	
+	SECURITY_ATTRIBUTES sa;
+	sa.bInheritHandle=TRUE;
+	sa.lpSecurityDescriptor=NULL;
+	sa.nLength=sizeof(SECURITY_ATTRIBUTES);//填充SECURITY_ATTRIBUTES结构体
+	if(!CreatePipe(&hRead,&hWrite,&sa,0))//创建匿名管道，并返回管道的读写句柄
+	{
+		MessageBox("创建匿名管道失败!");
+		return ;
+	}
+	
+	STARTUPINFO sui;
+	PROCESS_INFORMATION pi;
+	ZeroMemory(&sui,sizeof(STARTUPINFO));
+	sui.cb=sizeof(STRTUPINFO);
+	sui.swFlags=STRAT_USESTDHANDLES;
+	sui.hStdInput=hRead;//将匿名管道的读句柄赋给子进程的标准输出句柄
+	sui.hStdOutput=hWrite;//将匿名管道的读句柄赋给子进程的标准输入句柄
+	sui.hStdError=GetStdHandle(STD_ERROR_HANDLE);//获取错误句柄赋给子进程的标准错误句柄
+	if(!CreateProcess("..\\Child\\Debug\\Child.exe",NULL,NULL,NULL,TRUE,0,NULL,NULL,&sui,&pi))//启动子进程，即Child.exe
+	{
+		CloseHandle(hRead);
+		CloseHandle(hWrite):
+		hRead=NULL;
+		hWrite=NULL;
+		MessageBox("创建子进程失败");
+		return ;
+	}
+	else
+	{
+		CloseHandle(pi.hProcess);
+		CloseHandle(pi.hThread);
+	}
+	
+   二.读取数据
+	char buf[100];
+	DWORD dwRead;
+	if(!ReadFile(hRead,buf,100,&dwRead,NULL))
+	{
+		MessageBox("读取数据失败");
+		return ;
+	}
+	MessageBox(buf);
+ 
+    三.写入数据
+	char buf[]="YOUCAIHUA";
+	DWORD dwWrite;
+	if(!WriteFile(hWrite,buf,strlen(buf)+1,&dwWrite,NULL))
+	{
+		MessageBox("写入数据失败");
+		return ;
+	}
+	
+-----------子进程-----------------------------------------------------------
+
+	增减两个成员变量：HANDLE hRead,hWrite
+	构造函数中将它们初始化为NULL；
+	析构函数中判断它们是否有值，如果有调用CloseHandle();
+
+    一.	void CChildView::OnInitialUpdate()//视类虚函数，它是在视类窗口创建完成之后发送第一个消息
+	{
+		CView::OnInitialUpdate();
+		hRead=GetStdHandle(STD_INPUT_HANDLE);//获取父进程的读句柄
+		hWrite=GetStdHandle(STD_OUTPUT_HANDLE);//获取父进程的写句柄
+	}
+
+    二.读取数据
+	char buf[100];
+	DWORD dwRead;
+	if(!ReadFile(hRead,buf,100,&dwRead,NULL))
+	{
+		MessageBox("读取数据失败");
+		return ;
+	}
+	MessageBox(buf);
+ 
+    三.写入数据
+	char buf[]="YOUCAIHUA 测试";
+	DWORD dwWrite;
+	if(!WriteFile(hWrite,buf,strlen(buf)+1,&dwWrite,NULL))
+	{
+		MessageBox("写入数据失败");
+		return ;
+	}
+
+
+3.命名管道
+	
+	1.命名管道是通过网络来完成进程间的通信，它屏蔽了底层的网络协议细节。
+	2.命名管道提供两种基本的通信模式：字节模式和消息模式。在字节模式中，数据以一个连续的字节流的形式，在客户机和服务器之间流动。
+	  而在消息模式中，客户机和服务器则通过一系列不连续的数据单位，进行数据的收发，每次在管道上发出一系列消息后，它必须作为一条完整的消息读入
+
+	CrateNamedPipe();//创建一个命名管道的一个实例，并返回句柄
+
+----------命名管道服务器程序---------------------------------------------------
+
+	定义句柄变量用来保存命名管道的实例句柄	
+	构造函数中将它们初始化为NULL；
+	析构函数中判断它们是否有值，如果有调用CloseHandle();
+
+	HANDLE hPipe;
+	
+	hPipe=CreateNamedPipe("\\\\.\\pipe\\MyPipe",PIPE_ACCESS_DUPLEX, | FILE_FLAG_OVERLAPPED,0,1,1024,1024,0,NULL);//创建命名管道
+	if(INVALID_HANDLE_VALUE==hPipe)
+	{
+		MessageBox("创建命名管道失败");
+		hPipe=NULL;
+		return ;
+	}
+	HANDLE hEvent;
+	hEvent=CreateEvent(NULL,TRUE,FALSE,NULL);//创建事件对象
+	if(!hEvent)
+	{
+`		MessageBox("创建事件对象失败");
+		CloseHandle(hPipe);
+		hPipe=NULL;
+		return;
+	}
+	OVERLAPPED ovlap;
+	ZeroMemory(&ovlap,sizeof(OVERLAPPED));
+	ovlap.hEvent=hEvent;
+	if(!ConnectNamedPipe(hPipe,&ovlap))//等待客户端进程连接到命名管道的实例上
+	{
+		if(ERROR_IO_PENDING!=GetLastError())
+		{
+			MessageBox("等待客户端连接失败");
+			CloseHandle(hPipe);
+			CloseHandle(hEvent);
+			hPipe=NULL;
+			return;
+		}
+	}
+	IF(WAIT_FAILED==WaitForSingleObject(hEvent,INFINITE))//等待事件对象
+	{
+		MessageBox("等待对象失败");
+ 		CloseHandle(hPipe);
+		CloseHandle(hEvent);
+		hPipe=NULL;
+	}
+	CloseHandle(hEvent);
+	
+    二.读取数据
+	char buf[100];
+	DWORD dwRead;
+	if(!ReadFile(hPipe,buf,100,&dwRead,NULL))
+	{
+		MessageBox("读取数据失败");
+		return ;
+	}
+	MessageBox(buf);
+ 
+    三.写入数据
+	char buf[]="YOUCAIHUA 测试";
+	DWORD dwWrite;
+	if(!WriteFile(hPipe,buf,strlen(buf)+1,&dwWrite,NULL))
+	{
+		MessageBox("写入数据失败");
+		return ;
+	}
+
+----------命名管道客户端程序---------------------------------------------------
+
+	定义一个句柄变量，主要用于保存命名管道的句柄
+	构造函数中将它们初始化为NULL；
+	析构函数中判断它们是否有值，如果有调用CloseHandle();
+
+	HANDLE hPipe;
+	
+	IF(!WaitNamedPipe("\\\\.\\pipe\\MyPipe",MMPWAIT_WAIT_FOREVER))
+	{
+		MessageBox("当前没有可利用的命名管道实例");
+		return ;
+	}
+	hPipe=CreateFile("\\\\.\\pipe\\MyPipe",GENERIC_READ | GENERIC_WRITE,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);//打开命名管道
+	if(hPipe==INVALID_HANDLE_VALUE)
+	{
+		MessageBox("打开命名管道失败");
+		hPipe=NULL;
+		return ;
+	}
+
+    二.读取数据
+	char buf[100];
+	DWORD dwRead;
+	if(!ReadFile(hPipe,buf,100,&dwRead,NULL))
+	{
+		MessageBox("读取数据失败");
+		return ;
+	}
+	MessageBox(buf);
+ 
+    三.写入数据
+	char buf[]="YOUCAIHUA 测试";
+	DWORD dwWrite;
+	if(!WriteFile(hPipe,buf,strlen(buf)+1,&dwWrite,NULL))
+	{
+		MessageBox("写入数据失败");
+		return ;
+	}
+
+
+
+4.邮槽
+	1.邮槽是基于广播通信体系设计出来的，它采用无连接的不可靠的数据传输。
+	2.邮槽是一种单向通信机制，创建邮槽的服务器进程读取数据，打开邮槽的客户机进程写入数据。
+	3.为保证邮槽在各种Windows平台下都能正常工作，我们传输消息的时候，应该将消息的长度限制在424字节以下
+	
+	CreateMailslot();//用指定名字创建一个邮槽并返回句柄
+
+---------邮槽服务器---------------------------------------------------
+	HANDLE hMailslot;
+	hMailslot=CreateMailslot("\\\\.\\mailsolt\\MyMailslot",0,MAILSLOT_WAIT_FOREVER,NULL);
+	if(INVALID_HANDLE_VALUE==hMailslot)
+	{
+		MessageBox("创建邮槽失败");
+		return ;
+	}
+
+	char buf[100];
+	DWORD dwRead;
+	if(!ReadFile(hMailslot,buf,100,&dwRead,NULL))
+	{
+		MessageBox("读取数据失败");
+		return ;
+	}
+	MessageBox(buf);
+	CloseHandle(hMailslot);
+
+---------邮槽客户机---------------------------------------------------
+	HANDLE hMailslot;
+	hMailslot=CreateMailslot("\\\\.\\mailsolt\\MyMailslot",FENERIC_WRITE,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL)
+	if(INVALID_HANDLE_VALUE==hMailslot)
+	{
+		MessageBox("打开邮槽失败");
+		return;
+	}
+	char buf[]="YOUCAIHUA 测试";
+	DWORD dwWrite;
+	if(!WriteFile(hMailslot,buf,strlen(buf)+1,&dwWrite,NULL))
+	{
+		MessageBox("写入数据失败");
+		CloseHandle(hMailslot);
+		return ;
+	}
+	CloseHandle(hMailslot);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

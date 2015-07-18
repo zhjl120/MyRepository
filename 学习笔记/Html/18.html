@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=gb2312" />
+<title>CSS链接、光标、DHTML、缩放</title>
+<style type="text/css">
+	/*超链接伪类的使用*/
+	a{
+		/* 普通用法
+		color:blue;
+		text-decoration:none;
+		background:orange;
+		border:3px dashed black;*/
+	}
+	a:link{  /*伪类，表示超链接文字尚未被点选*/
+		color:red;
+		text-decoration:none;	
+	}
+	a:visited{ /*表示文字已经被点选*/
+		color:red;
+		text-decoration:none;	
+	}
+	a:hover{ /*当鼠标停留在文字上时*/
+		color:blue;
+		text-decoration:underline;	
+	}
+	a:active{ /*表示超链接正被点选，但未被松开*/
+		color:green;	
+	}
+	/*光标测试*/	
+	span{
+		cursor:crosshair;	/*设置光标的样式*/
+	}
+	/*缩放测试*/
+	div{
+		width:500px;
+		height:400px;
+		background:green;
+		text-align:center;	
+		padding-top:20px;
+		zoom:0.55; /*放大缩小*/
+	}
+		
+</style>
+</head>
+<body>
+	
+	<a href="http://www.baidu.com">baidu</a>
+	
+	<span>光标测试</span>
+	
+	<div>
+		<img src="img/1.jpg" />	
+	</div>
+	
+	
+</body>
+</html>

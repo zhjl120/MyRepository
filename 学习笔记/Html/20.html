@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=gb2312" />
+<title>CSS定义选择器</title>
+<style type="text/css">
+	/*定义id的css属性*/
+	#title{ /*设置id=title的标签的属性*/
+		color:red;	
+	}
+	h2{ 
+		color:green;	
+	}
+	h2#title{ /*定义h2标签中id为title的属性*/
+		color:orange;
+	}
+	/*定义class的属性*/
+	.content{
+		color:blue;	
+	}
+	#drinks{
+		line-height:200%;
+		color:red;	
+	}	
+	.mix{
+		font-size:26px;	
+	}
+	.hot{
+		font-size:16px;	
+	}
+	/*标签属性的简化声明*/
+	h1,h2,h3{
+		font-size:30px; /*声明了标题123这3个标签都具有字体大小为30px的属性*/	
+	}
+	
+</style>
+</head>
+<body>
+	<!--id的使用-->
+	<p id="title">id测试</p>
+	
+	<!--id与选择器结合使用-->
+	<h2>id与选择器结合测试1</h2>
+	<h2 id="title">id与选择器结合测试2</h2>
+	
+	<!--class使用-->
+	<p class="content">class测试</p>
+	
+	<ul id="drinks">
+		<li class="mix">红茶</li>	
+		<li class="hot">绿茶</li>	
+		<li class="mix">可乐</li>	
+	</ul>
+	
+	<br /><br />
+	
+	<h1>h1 test</h1>
+	<h2>h2 test</h2>
+	<h3>h3 test</h3>
+	
+</body>
+</html>

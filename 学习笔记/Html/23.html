@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=gb2312" />
+<title>CSS构造颜色、背景与图像</title>
+<style type="text/css">
+	
+	body{
+		background:#fff;/*十六进制颜色表示*/	
+	}
+	div span{
+		color:red;	
+	}
+	div#test{
+		background:pink;	
+	}
+	span#test{
+		background:orange;	
+	}
+	span#test2{
+		width:100px;
+		height:100px;
+		background:red;
+		display:block;/*注意此处标签是span，它是内联的，当使用display属性后，它就具有了
+		区块的属性。如果使用它的标签是div，则可以将区块转换为内联*/
+	}
+	div#bg{
+		width:150px;
+		height:150px;
+		background:url(img/1.jpg);	 /*给区块加背景*/
+	}
+</style>
+</head>
+<body>
+	<!--使用span来处理文本中特殊的文本-->
+	<div>在文本中处理<span>特殊</span>字段</div>
+	
+	<div id="test">区块测试</div>
+	<span id="test">内联测试</span>
+	
+	<span id="test2">display转换区块测试</span>
+	
+	<div id="bg">给区块加背景</div>
+</body>
+</html>
+	

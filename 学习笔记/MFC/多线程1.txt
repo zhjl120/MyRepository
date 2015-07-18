@@ -1,0 +1,234 @@
+1.多线程
+	线程同步：
+	1.互斥器：CreateMutex();//创建互斥器
+	  互斥对象属于内核对象，它能够确保线程拥有对单个资源的互斥访问权，互斥对象包含一个使用数量，一个线程ID和一个计数器，ID用于标识系统中的哪个线程
+	  当前拥有互斥对象，计数器用于指明该线程拥有互斥对象的次数
+	2.WaitForSingleObject();//在以下两种情况下返回：1.指定的对象处于有信号状态时 2.超时时。如果不满足条件将一直等待
+	3.ReleaseMutex();//释放互斥对象的所有权，并将对象设为有信号状态
+	  注意：谁拥有互斥对象谁才能释放互斥对象
+	4.如果一个线程已经拥有了互斥对象，则将信号状态设为无信号，并将计数器加1，但是如果又在该线程中再次请求互斥对象，则该互斥对象会在计数器上再次加1，即现在是2
+	  ReleaseMutex函数被调用时将计数器减1，所以如果要完全释放对象，在线程中请求了几次对象就需要调用几次ReleaseMutex函数，否则对象的信号状态将一直是无信号
+	5.如果一个线程在拥有互斥对象后没有释放对象，当操作系统发现该线程结束时会自动将该互斥对象设为有信号状态，ID设为0，那么如何判断一个对象是被正常的释放还是被
+	  操作系统释放的呢？这可以通过WaitForSingleObject()函数的返回值判断，这时它会返回WAIT_ABANDONED
+	6.在创建一个命名的互斥对象后，如果在另外一个地方再次创建一个同名的互斥对象，则它将返回先前创建的互斥对象
+	
+#include<windows.h>
+#include<iostream.h>
+
+DWORD WINAPI Fun1Proc(LPVIOD lpParameter);
+DWORD WINAPI Fun2Proc(LPVIOD lpParameter);
+int index=0;
+int tickets=100;
+HANDLE hMeutex;//将互斥对象声明为全局的是因为它要在其它线程中使用
+int main()
+{
+	HANDLE hThread1;//用于接收线程句柄
+	HANDLE hThread2;
+
+	hThread1=CreateThread(NULL,0,Fun1Proc,NULL,0,NULL);//创建一个线程
+	hThread2=CreateThread(NULL,0,Fun2Proc,NULL,0,NULL);
+
+	CloseHandle(hThread1); //关闭线程句柄，但它并没有关闭线程的执行
+	CloseHandle(hThread1);
+	
+	hMutex=CreateMutex(NULL,TRUE,NULL);//创建一个匿名的互斥对象,如果第二个参数是TRUE，则该线程将拥有该互斥对象，互斥对象的计数器将加1
+	------以下主要为演示需要，如果不想主线程拥有互斥对象，则将第二个参数设为FALSE就可以了
+	WaitForSingleObject(hMutex,INFINITE);//再次请求互斥对象，虽然现在互斥对象是无信号状态，但是因为请求对象的线程ID就是现在拥有对象的线程，所以它还是会返回成功，这时对象计数器将再加1
+	ReleaseMutex(hMutex);//将计数器减1
+	ReleaseMutex(hMutex);//由于在该线程中对互斥对象拥有了两次，计数器为2，所以要完全释放对象，使对象设为有信号状态，就必须再次调用ReleaseMutex函数
+	----------
+	sleep(4000);//睡眠4秒，以使其它线程有机会执行
+}
+
+DWORD WINAPI Fun1Proc(LPVIOD lpParameter)
+{
+	while(TRUE)
+	{	
+		WaitForSingleObject(hMutex,INFINITE);//等待互斥对象变为有信号，因为在主线程中创建了一个匿名的互斥对象，所以它默认是处于有信号的，这里函数将立即返回，然后该线程
+		if(tickets>0)			     //将拥有该互斥对象，互斥对象的ID将设置为线程ID，信号状态将设置为无信号，表示已经有线程拥有该对象了
+			cout<<"thread1 sell ticket:"<<tickets--<<endl;
+		else
+			break;
+		ReleaseMutex(hMutex);//释放互斥对象，此时互斥对象的ID将被设为0，信号状态将被设为有信号状态
+	}
+	return 0;
+}
+DWORD WINAPI Fun2Proc(LPVIOD lpParameter)
+{	
+	while(TRUE)
+	{
+		WaitForSingleObject(hMutex,INFINITE);
+		if(tickets>0)
+			cout<<"thread2 sell ticket:"<<tickets--<<endl;
+		else
+			break;
+		ReleaseMutex(hMutex);
+	}
+	return 0;
+}
+
+
+2.--------------------------------------------------------
+	判断创建的命名对象是否已经被创建了
+	hMutex=CreateMutex(NULL,TRUE"tickets",);
+	if(hMutex)
+	{
+		if(ERROR_ALREADY_EXISTS==GetLastError())
+		{
+			cout<<"只能有一个实例被运行"<<endl;
+			return ;
+		}
+	}
+-------------------------------------------------------
+
+
+3.多线程网络聊天室
+	MFC:
+  一.	包含头文件：在StdAfx.h中添加头文件 #include<Afxsock.h>
+  二.	AfxSocketInit();//加载套接字协议栈，该函数可放在CWinApp::InitInstance函数中
+	
+	CWinApp::InitInstance()//在程序创建时加载协议栈
+	{
+		if(!AfxSocktInit())//判断加载协议栈是否成功
+		{
+			AfxMessageBox("加载协议栈失败");
+			return FALSE;//返回FALSE将是程序创建失败
+		}
+	}
+  三.在CChatDlg类中添加一个成员函数完成套件字初始化
+	将此函数放在CChatDlg类中的OnInitDialog中调用
+
+	m_socket=socket(AF_INET,SOCK_DGRAM,0);
+	if(INVALID_SOCKET==m_socket)
+	{
+		MessageBox("套接字创建失败");
+		return FALSE;
+	}
+	SOCKADDR_IN addrSock;
+	addrSock.sin_family=AF_INET;
+	addrSock.sin_port=htons(6000);
+	addrSock.sin_addr.S_un.S_addr=htonl(INADDR_ANY);
+	int retval;
+	retval=bind(m_socket,(SOCKADDR*)&addrSock,sizeof(SOCKADDR));
+	if(SOCKET_ERROR==retval)
+	{
+		closesocket(m_socket);
+		MessageBox("绑定失败");
+		return FALSE;
+	}
+	return TRUE;
+
+   四.接收端
+	在CChatDlg类的头文件中定义一个结构体用于给线程函数传递套接字和窗口句柄
+	struct RECVPARAM
+	{	
+		SOCKET sock;
+		HWND hwnd;
+	};
+
+	在CChatDlg类中的OnInitDialog中创建一个接收数据的线程，
+
+	RECVPARAM *pRecvParam=new RECVPARAM;//创建一个结构体
+	pRecvParam->sock=m_socket;//初始化数据
+	pRecvParam->hwnd=m_hWnd;
+	HANDLE hThread=CreateThread(NULL,0,RecvProc,(LPVOID)pRecvParam,0,NULL);//创建一个线程，并将套接字和对话框句柄作为参数传递进去
+	CloseHandle(hThread);//关闭线程句柄
+
+      	写线程函数，可将它写成全局函数或者写成一个静态的成员函数：
+	DWORD WINPAI CChatDlg::RecvProc(LPVOID lpParameter)
+	{
+		SOCKET sock=((RECVPARAM)lpParameter)->sock;//保存套接字和对话框句柄
+		HWND hwnd=((RECVPARAM)lpParameter)->hWnd;
+		
+		SOCKADDR_IN addrFrom;
+		int len=sizeof(SOCKADDR);
+		char recvBuf[200];//接收缓冲区
+		char tempBuf[300];//用于格式化接收的数据
+		int retval;
+
+		while(1)
+		{
+			retval=recvfrom(sock,recvBuf,200,0,(SOCKADDR*)&addrFrom,&len);//接收数据
+			if(SOCKET_ERROR==retval)
+				break;
+			sprintf(tempBuf,"%s说:%s",inet_ntoa(addrFrom.sin_addr),recvBuf);//将数据格式化到tempBuf中
+			::PostMessage(hwnd,WM_RECVDATA,0,(LPARAM)tempBuf);//发送自定义消息处理数据，自定义消息的定义，消息响应，函数原型等具体方法参看以前笔记
+		}       //注意此处为什么要使用发送消息去处理数据，这是因为接收数据是在一个新的线程中进行的，对对话框的处理需要在主线程中进行
+		return 0;
+	}
+	自定义消息响应函数：
+	void CChatDlg::OnRecvData(WPARAM wParam,LPARAM lParam)
+	{
+		CString str=(char*)lParam;
+		CString strTemp;
+		GetDlgItemText(IDC_EDIT_RECV,strTemp);
+		str+="\r\n";
+		str+=strTemp;
+		SetDlgItemText(IDC_EDIT_RECV,str)
+	}
+    
+    五.发送端：
+	为发送按钮添加响应函数
+	DWORD dwIP;//用于接收IP地址
+	((CIPAddressCtrl*)GetDlgItem(IDC_IPADDRESS1))->GetAddress(dwIP);//获取IP地址，因为IP控件是CIPAddressCtrl类所以需要强制转换
+	
+	SOCKADDR_IN addrTo;
+	addrTo.sin_family=AF_INET;
+	addrTo.sin_port=htons(6000);
+	addrTo.sin_addr.S_un.S_addr=htonl(dwIP);//填充地址结构体
+
+	CString strSend;
+	GetDlgItemText(IDC_EDIT_SEND,strSend);//获取发送框内的内容
+	SendTo(m_socket,strSend,strSend.GetLength()+1,0,(SOCKADDR*)&addrTo,sizeof(SOCKADDR));//发送数据
+	SetDlgItemText(IDC_EDIT_SEND,"");//将发送框置空
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

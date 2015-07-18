@@ -1,0 +1,194 @@
+1.事件对象
+	1.事件对象也属于内核对象，包含一个使用计数，一个用于指明事件对象是一个自动重置的事件的事件还是一个人工重置的事件的布尔值，另一个用于指明该事件处于已通知状态还是
+	  未通知状态的布尔值
+	2.有两种不同类型的事件对象，一种是人工重置的事件，另一种是自动重置的事件。当人工重置的事件得到通知时，等待该事件的所有线程均变为可调度线程。当一个自动重置的事件得到
+	  通知时，等待该事件的线程中只有一个线程变为可调度线程	
+	3.对于线程同步，不要采用人工重置的事件对象，因为当人工重置的事件得到通知时，等待该事件的所有线程均变为可调度线程，相当于多个线程可以拥有同一个资源
+	4.当一个线程已经拥有了事件对象，如果在此线程中再次请求该对象，它是请求不到的。但是在互斥器中是可以的。
+	
+	函数：
+	CreateEvent();//创建或者打开一个命名的或匿名的事件对象
+	参数：1.NULL  2.指定它是一个人工重置的还是自动重置的对象   3.指定事件对象的初始化状态，TRUE：有信号，FALSE：无信号状态  4.对象名字，NULL:匿名对象
+	SetEvent(g_hEvent);//设置事件对象为有信号状态
+	ResetEvent(g_hEvent);//设置事件对象为无信号状态
+
+----------------------------------------------------------------------------------
+#include<windows.h>
+#include<iostream.h>
+
+DWORD WINAPI Fun1Proc(LPVIOD lpParameter);
+DWORD WINAPI Fun2Proc(LPVIOD lpParameter);
+
+int tickets=100;
+HANDLE g_hEvent;
+
+int main()
+{
+	HANDLE hThread1;//用于接收线程句柄
+	HANDLE hThread2;
+
+	hThread1=CreateThread(NULL,0,Fun1Proc,NULL,0,NULL);//创建一个线程
+	hThread2=CreateThread(NULL,0,Fun2Proc,NULL,0,NULL);
+
+	CloseHandle(hThread1); //关闭线程句柄，但它并没有关闭线程的执行
+	CloseHandle(hThread1);
+
+	g_hEvent=CreateEvent(NULL,FALSE,FALSE,NULL);//创建一个自动重置的事件对象，初始化为无信号状态
+	SetEvent(g_hEvent);//使事件对象设置为有信号状态，也可在创建时将第三个参数设TRUE
+	Sleep(4000);
+
+	CloseHandle(g_hEvent);
+}	
+DWORD WINAPI Fun1Proc(LPVIOD lpParameter)
+{
+	while(TRUE)
+	{	
+		WaitForSingleObject(g_hEvent,INFINITE);//请求事件对象，当请求到事件对象后将会重置对象为无信号状态
+		if(tickets>0)			     
+			cout<<"thread1 sell ticket:"<<tickets--<<endl;
+		else
+			break;
+		SetEvent(g_hEvent);//设置事件对象为有信号状态，如果不设置为有信号状态，即使是拥有该对象的线程也不能再次获得该对象
+	}
+	return 0;
+}
+DWORD WINAPI Fun2Proc(LPVIOD lpParameter)
+{	
+	while(TRUE)
+	{
+		WaitForSingleObject(g_hEvent,INFINITE);
+		if(tickets>0)
+			cout<<"thread2 sell ticket:"<<tickets--<<endl;
+		else
+			break;
+		SetEvent(g_hEvent);
+	}
+	return 0;
+}
+
+-------------------------------------------------------------------------------
+2.通过创建事件对象的返回值判断是否已经创建了一个实例
+	
+	g_hEvent=CreateEvent(NULL,FALSE,FALSE,"tickets");//创建一个命名的自动重置事件对象
+	if(g_hEvent)//判断句柄是否有值
+	{
+		if(ERROR_ALREADY_EXISTS==GetLastError())//判断是否该对象是否已经创建了，如果已经创建了则提示并返回
+		{
+			cout<<"只可以运行一个实例"<<endl;
+			return 0;
+		}
+	}
+-------------------------------------------------------------------------------
+3.关键代码段(临界区)
+	关键代码段(临界区)工作在用户方式下，它是指一个小代码段，在代码能执行前，它必须独占对某些资源的访问权
+	
+	函数：
+	InitializeCriticalSection(&g_cs);//初始化一个临界区对象
+	DeleteCriticalSection(&g_cs);//不需要时删除临界区对象
+	EnterCriticalSection();//等待临界区对象的所有权，当等待线程被赋予所有权时函数返回，否则一直等待
+	LeaveCriticalSection(&g_cs);//释放临界区对象的所有权
+
+#include<windows.h>
+#include<iostream.h>
+
+DWORD WINAPI Fun1Proc(LPVIOD lpParameter);
+DWORD WINAPI Fun2Proc(LPVIOD lpParameter);
+
+int tickets=100;
+LPCRITICAL_SECTION  g_cs;//定义全局临界区对象
+
+int main()
+{
+	HANDLE hThread1;//用于接收线程句柄
+	HANDLE hThread2;
+
+	hThread1=CreateThread(NULL,0,Fun1Proc,NULL,0,NULL);//创建一个线程
+	hThread2=CreateThread(NULL,0,Fun2Proc,NULL,0,NULL);
+
+	CloseHandle(hThread1); //关闭线程句柄，但它并没有关闭线程的执行
+	CloseHandle(hThread1);
+	
+	InitializeCriticalSection(&g_cs);//初始化一个临界区对象
+	Sleep(4000);
+	DeleteCriticalSection(&g_cs);//不需要时删除临界区对象
+
+}	
+DWORD WINAPI Fun1Proc(LPVIOD lpParameter)
+{
+	while(TRUE)
+	{	
+		EnterCriticalSection(&g_cs);//判断能否得到临界区的所有权，如果不能得到，线程将一直处于等待状态
+		if(tickets>0)			     
+			cout<<"thread1 sell ticket:"<<tickets--<<endl;
+		else
+			break;
+		LeaveCriticalSection(&g_cs);//释放临界区对象的所有权
+	}
+	return 0;
+}
+DWORD WINAPI Fun2Proc(LPVIOD lpParameter)
+{	
+	while(TRUE)
+	{
+		EnterCriticalSection(&g_cs);
+		if(tickets>0)
+			cout<<"thread2 sell ticket:"<<tickets--<<endl;
+		else
+			break;
+		LeaveCriticalSection(&g_cs);
+	}
+	return 0;
+}
+-----------------------------------------------------------------------
+4.线程死锁
+	哲学家进餐问题，每人只有一只筷子，但是都不想把自己的筷子给别人用，于是就形成了死锁，这样谁都吃不到东西
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+5.互斥对象、事件对象与关键代码段的比较
+
+	互斥对象和事件对象属于内核对象，利用内核对象进行线程同步，速度较慢，但利用互斥对象和事件对象这样的内核对象，可以在多个进程中的各个线程之间进行同步。
+	关键代码段是工作在用户模式下的，同步速度较快，但在使用关键代码段时很容易进入死锁状态，因为在等待进入代码段时无法设定超时值
+
+		
+	在编写多线程程序时，如果需要线程同步，首选关键代码段
+	如果需要在多个进程中的多个线程之间同步，则可以使用互斥对象和事件对象
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

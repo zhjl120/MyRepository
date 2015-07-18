@@ -1,0 +1,208 @@
+记录：	在MFC中对资源的操作通常是通过和资源相对应的一个类来完成的
+	对话框分为：模态对话框和非模态对话框
+
+1.	创建对话框：创建一个对话框类（从CDialog类派生）与在资源视图中创建的对话框相关联，此后程序就可以通过创建一个该类的对象来
+		    创建一个对话框
+  一. 创建模态对话框：
+	函数：DoModel();//创建一个模态对话框
+	      EndDialog();//关闭一个模态对话框
+	
+	先包含对话框类的头文件：#include<TestDlg.h>
+	CTestDlg dlg;//注意此处是局部变量，如果是创建非模态对话框则需要定义为成员变量，因为模态对话框执行时程序会暂停在该处，在对话框销毁之后再继续执行                                           
+	dlg.DoModal();//即创建了一个CTestDlg类所关联的对话框，这里是模态对话框，所以在关闭该对话框之前不能对其它窗口进行操作
+  二. 创建非模态对话框:
+	注意：一个非模态对话框需要在类中覆盖基类的OnOk函数，在函数中调用DestroyWindow()函数来销毁对话框，如果不重写OnOk函数，则对话框只是被隐藏了，并没有被销毁
+	函数：Create();//创建一个非模态对话框，
+	CTestDlg dlg;//定义为成员变量，因为非模态对话框在运行时，程序不会暂停所以当函数执行完成，该对话框也就被销毁了
+	dlg.Create(IDD_DIALOG1,this);//创建一个非模态对话框，第一个参数是对话框ID，第二个参数是父窗口句柄
+	dlg.ShowWindow(SW_SHOW);//显示对话框窗口，非模态对话框创建之后需要显示
+
+2.动态创建按钮
+	CButton m_btn;//定义一个Button对象为成员变量
+	BOOL m_bIsCreate;//在构造函数中初始化为FALSE，该变量用于识别m_btn对象是否已经跟一个按钮相关联
+	//还可以用一个静态的IsCreate变量来判断对象是否关联了按钮
+	if(m_bIsCreate==FALSE)//如果m_btn对象没有与一个按钮相关联，则创建一个按钮
+	{
+		m_btn.Create("youcaihua",BS_EDFPUSHBUTTON | WS_VISIBLE | WS_CHILD,CRect(0,0,100,100),this,123);
+		m_bIsCreate=TRUE;//标识m_btn已经和一个按钮关联上了
+	}
+	else
+	{
+		m_btn.DestoryWindow();//如果m_btn已经与一个按钮相关联，则销毁它
+		m_bIsCreate=FALSE//并重置m_bIsCreate
+	}
+	通过判断对象的句柄是否为空来判断对象是否与按钮相关联
+	if(!m_btn.m_hWnd)
+	{
+		m_btn.Create("youcaihua",BS_EDFPUSHBUTTON | WS_VISIBLE | WS_CHILD,CRect(0,0,100,100),this,123);
+	}
+	else
+	{
+		m_btn.DestoryWindow();
+	}
+
+
+3.	静态文本是不接受点击响应的，如果需要让静态文本框响应点击，需要将属性对话框中的Notify勾选上
+	函数：GetDlgItem(ID号);//用于获取指定控件的指针或者一个子窗口，多用于对话框中获取控件指针
+	CString str;
+	if(GetDlgItem(IDC_NUMBER1)->GetWindowText(str),str=="NUMBER1:")//此处的IDC_NUMBER1是一个静态文本，此段代码的功能是更改静态文本内容
+	｛
+		GetDlgItem(IDC_NUMBER1)->SetWindowText("数字1：");
+	｝
+	else
+	{
+		GetDlgItem(IDC_NUMBER1)->SetWindowText("NUMBER1：");	
+	}
+	      
+函数：	GetDlgItemText(IDC_EDIT1,ch3,10);//通控件ID获取字符内容
+	SetDlgItemText(IDC_EDIT1,ch3);//通控件ID设置字符内容
+	int x=GetDlgItemInt(IDC_EDIT1);//通过控件ID返回控件的整形值
+	SetDlgItemInt(IDC_EDIT1,x);//通过控件ID设置控件的整形值
+	atoi()//整形转化为字符型
+      	itoa()//字符型转换为整形
+
+	
+	给控件关联成员变量，以后就可以通过成员变量来操作控件的值了，但是在对值进行操作之前需要调用UpdateData()函数对控件进行刷新，
+	对值进行操作之后需要再次调用UpdateData(FALSE)函数对控件内容进行设置
+	
+
+4.通过发送消息获取或设置控件内容
+	消息：WM_GETTEXT    WM_SETTEXT
+   一.	设置控件内容:
+	::SendMessage(GetDlgItem(IDC_EDIT1)->m_hWnd,WM_GETTEXT,10,(LPARAM)ch1);//发送消息，参数1是控件的句柄，参数2是消息，参数3是获取内容的大小，参数3是接收的Buffer
+	::SendMessage(GetDlgItem(m_edit.m_hWnd,WM_GETTEXT,10,(LPARAM)ch1);//通过控件变量直接调用控件句柄
+	GetDlgItem(IDC_EDIT1)->SendMessage(WM_GETTEXT,10,(LPARAM)ch1);//先获取控件指针再调用控件的成员函数SendMessage发送消息，此处就不在需要控件句柄了
+	m_edit1.(WM_GETTEXT,10,(LPARAM)ch1);//通过控件变量调用SendMessage
+   二.	设置控件内容:
+	m_edit.SendMessage(WM_SETTEXT,0,(LPARAM)ch3);//发送设置消息，第二个参数必须为0，第三个参数是需设置的字符串
+	
+5.通过直接给对话框的子控件发送消息
+	函数:SendDlgItemMessage()//用于给子控件发送消息，相当于将GetDlgItem()和SendMessage()函数组合到一起
+	SendDlgItemMessage(IDC_EDIT1,WM_GETTEXT,10,(LPARAM)ch1);
+	SendDlgItemMessage(IDC_EDIT2,WM_SETTEXT,0,(LPARAM)ch2);
+
+6.获取文本复选的消息：EM_GETSEL
+	SendDlgItemMessage(IDC_EDIT3,EM_SETSEL,1,3);//后两个参数是复选的开始和结束位置，如果开始位置设为0，结束位置设为-1，则将所有文本复选上
+	m_edit3.SetFocus();//设置编辑框控件3为焦点
+
+总结：七种对话框控件访问方式
+
+	一.GetDlgItem()->Get(Set)WindowText();
+	二.GetDlgItemText/SetDlgItemText();
+	三.GetDlgItemInt/SetDlgItemText();
+	四.将控件和整形变量相关联
+	五.将控件和控件变量相关联
+	六.SendMessage();
+	七.SendDlgItemMessage();
+
+
+7.扩展、收缩对话框
+	CString str;
+	if(GetDlgItemText(IDC_BUTTON2,str),str=="收缩<<")
+	{
+		SetDlgItemText(IDC_BUTTON2,"扩展>>");
+	}
+	else
+	{
+		SetDlgItemText(IDC_BUTTON2,"收缩<<");
+	}
+	static CRect rectLarge;//用于保留对话框原始尺寸
+	static CRect rectSmall;//用于保留收缩后的对话框尺寸
+	if(rectLarge.IsRectEmpty())
+	{
+		GetWindowRect(&rectLarge)//获取原始窗口大小
+		CRect rectSeparator;
+		GetDlgItem(IDC_SEPARATOR)->GetWindowRect(&rectSeparator);//获取切割后窗口大小
+		rectSmall.left=rectLarge.left;
+		rectSmall.top=rectLarge.top;
+		rectSmall.right=rectLarge.right;
+		rectSmall.bottom=rectSeparator.bottom;
+	}
+	if(str=="收缩<<")
+	{
+		SetWindowPos(NULL,0,0,rectSmall.Width(),rectSmall.Height(),NO_MOVE | NO_ZORDER);//设置窗口的显示大小
+	}
+	else
+	{
+		SetWindowPos(NULL,0,0,rectSmall.Width(),rectSeparator.Height(),NO_MOVE | NO_ZORDER);
+	}
+
+8.设置输入焦点
+   
+   方法一：比较麻烦
+	SetWindowLong();//可改变的一个窗口的过程
+	添加对话框消息处理：WM_INITDIALOG   //此消息会在对话框创建完成之后，在显示之前发送
+	WNDPROC preProc;
+	OnInitDialog()函数中：   //在此函数中修改对话框控件的过程
+	pervProc=(WNDPROC)SetWindowLong(GetDlgItem(IDC_EDIT1)->m_hWnd,GWL_WNDPROC,(LONG)WinSunProc);//设置控件IDC_EDIT1的窗口过程为WinSunProc()
+`	定义新的窗口过程：
+	LRESULT CALLBACK WinSunProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+	{
+		if(uMsg==WM_CHAR && wParam==0x0d)//如果用户回车，则设置下一个输入焦点
+		{	
+			//::SetFocus(::GetNextWindow(hwnd,GW_HWNDNEXT));//SetFocus用于设置焦点，GetNextWindow用于获取下一个窗口句柄
+			//SetFocus(::GetWindow(hwnd,GW_HWNDNEXT))
+			SetFocus(::GetNextDlgTableItem(::GetParent(hwmd),hwnd,FALSE));
+			return 1;
+		}	
+		else
+		{
+			return PrevProc(hwnd,uMsg,wParam,lParam);//如果不是回车，则交由原来的过程处理
+		}
+	}
+   方法2：比较简便
+	在缺省缺钮的响应函数中：如OnOk函数中	
+	GetNextDlgTableItem(GetFocus())->SetFocus();// 先获取当前焦点的句柄，再获取下一个窗口句柄，然后设置输入焦点
+	该函数按照tap order的顺序循环查找，设置焦点就用这个函数寻找下一个窗口，不能用GetWindow GetNextWindow等
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

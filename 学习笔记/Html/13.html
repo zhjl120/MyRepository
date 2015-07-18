@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=gb2312" />
+<title>CSS入门基础1</title>
+
+<!--外部链接式方式-->
+<link rel="stylesheet" type="text/css" href="css/13.css"/>
+	
+	
+<!--内嵌式排版样式，必须定义在<style>标签中，而<style>标签必须在head标签中-->
+<!--内嵌式排版样式又分为三种：标记定义型，class定义型，id定义型-->
+<style type="text/css">
+	/*标记定义型*/
+	p{
+		color:green;	
+		font-szie:20px;
+		font-weight:bold;
+	}
+	/*class定义型*/
+	.abc{
+		color:blue;	
+	}
+	/*id定义型*/
+	#def{
+		color:red;	
+	}
+	/*组合定义型, 可作用于多个标记，通常用于定义某些标记所共有的特性，以简化代码*/
+	.abc,def{
+		color:black;
+	}
+	
+</style>
+</head>
+
+<body>
+	<!--html的方式-->
+	<p align="center"><font color="red">CSS style test</font></p><br/>
+	<!--行内式排版样式-->
+	<p style="text-align:center; color:red; font-weight:bold">CSS style test</p>
+
+	<!--专用排版标记 div和span-->	
+	<!--内联区块，不换行，只占据内容所需要的部份空间-->
+	<span style="color:red; background:#666;">span test</span>
+	<span style="color:green; background:#999;">span test</span>
+	<span style="color:blue; background:#ccc;">span test</span>
+	
+	<br /><br />
+	<!--div 换行且占据整个区块-->
+	<div style="color:red; background:#666;">div test</div>
+	<div style="color:green; background:#999;">div test</div>
+	<div style="color:blue; background:#ccc;">div test</div>
+
+	<br /><br />
+	<!--内嵌式排版样式-->
+	<p>标记型排版样式测试</p>
+	<p>标记型排版样式测试</p>
+	<p>标记型排版样式测试</p>
+	<p class="abc">class型排版样式测试</p>
+	<p class="abc">class型排版样式测试</p>
+	<p id="def">id型排版样式测试</p>
+	
+	<b>链接外部css样式表测试</b>
+</body>
+</html>

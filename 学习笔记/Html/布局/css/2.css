@@ -1,0 +1,20 @@
+*{
+	margin:0;
+	padding:0;	
+}
+body{
+	margin:10px;	
+}
+#header{
+	border:1px solid black;	
+	padding:15px;
+	background:#ccc;
+}
+#header h1{
+	text-align:center;
+	font-size:16px;
+}
+#nav{
+	width:30%;
+	border:1px solid black;	
+}

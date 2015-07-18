@@ -1,0 +1,90 @@
+1.CPtrArray类可存储多个对象
+
+
+2.元文件
+
+	CMetaFileDC m_dcMetaFile;//定义一个元文件类的对象（数据成员）
+	
+	m_dcMetaFile.Create();//创建一个元文件
+	m_dcMetaFile.MoveTo(point1);//从创建开始后面的绘图操作都将被保存
+	m_dcMetaFile.LineTo(poin2);
+	
+	HMETAFILE mf=m_dcMetaFile.Close();//关闭元文件，并返回保存了绘图命令的元文件句柄
+	pDC->PlayMetaFile(mf);//使用pDC播放元文件内容
+	m_dcMetaFile.Create();//再创建一个元文件用于继续接收用户的绘制操作
+	m_dcMetaFile.PlayMetaFile(mf);//这句至关重要，先前创建的元文件句柄还没有删除，这时又创建了一个元文件，在这个元文件中又再次播放了先前创建的
+					//元文件的内容，它所起的作用是保存所以的用户绘制，而不是只保存一个元文件的内容
+	DeleteMetaFile(mf);//在将先前的内容也输出后，删除先前所创建的元文件句柄
+	//此处相当于将上一元文件内容包含到这一次的元文件中
+
+
+	CopyMetaFile(mf,"metafile.wmf");//将元文件保存为一个文件
+	GetEnhMetaFile("metafile.wmf");//打开一个元文件
+	
+	m_dcMetaFile.PlayMetaFile(metafile);//播放元文件
+	
+
+3.兼容DC保存图形
+	CDC m_dcCompatible;
+	
+	if(!m_dcCompatible.m_hDC)//判断是否已经创建兼容DC
+	｛
+		m_dcCompatible.CreateCompatibleDC(&dc);//创建一个兼容DC
+		CRect rect;
+		GetClientRect(&rect);//获取客户区大小
+		CBitmap bitmap;
+		bitmap.CreateCompatibleBitmap(&dc,rect.Width(),rect.Height());//创建一个客户区大小的兼容位图
+		m_dcCompatible.SelectObject(&bitmap);//将兼容位图选进兼容DC
+
+		m_dcCompatible.BitBlt(0,0,rect.Width(),rect.Height(),&dc,0,0,SRCCOPY);//此函数用于将位图的像素块拷贝进兼容DC，此步必不可少
+		m_dcCompatible.SelectObject(NULL_BRUSH);//选择一个空画刷
+	 ｝
+	m_dcCompatible.MoveTo(point1);//使用兼容DC开始绘图
+	m_dcCompatible.LineTo(point2);
+	.......
+	
+	CRect rect;
+	GetClientRect(&rect);
+	pDC->BitBlt(0,0,rect.Width(),rect.Height(),&m_dcCompatible,0,0,SRCCOPY);//使用pDC将绘制好了的位图以客户区大小显示出来
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

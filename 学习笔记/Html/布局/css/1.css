@@ -1,0 +1,44 @@
+#head{
+	width:auto;
+	border:1px solid black;	
+	height:50px;
+	margin-bottom:10px;
+}
+#head h1{
+	font-size:16px;
+	line-height:50px;
+	text-align:center;
+	margin:0;
+	padding:0;
+}
+#nav{
+	border:1px solid black;	
+	width:35%;
+	height:350px;
+	float:left;
+}
+#nav ul{
+	text-align:left;
+	line-height:40px;	
+}
+#main{
+	border:1px solid black;	
+	width:63%;
+	height:350px;
+	float:right;
+	margin-bottom:10px;
+}
+#main p{
+	padding:10px;
+	text-indent:35px;
+	letter-spacing:2px;
+	line-height:150%;	
+}
+#foot {
+	line-height:30px;
+	border:1px solid black;
+	clear:both;
+}
+#foot p{
+	text-align:center;	
+}

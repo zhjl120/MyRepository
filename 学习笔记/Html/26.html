@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=gb2312" />
+<title>CSS构造表格</title>
+<style type="text/css">
+
+	table{
+		width:auto;
+		border:1px solid black;
+		margin-left:20px;	
+		border-collapse:collapse;/**/
+	}
+	th,td{
+		background:gold;	
+		width:50px;
+		border-color:black;
+		padding:5px;
+		text-align:center;
+	}
+	
+
+</style>
+<body>
+
+	<table>
+		<tr><th>1</th><th>2</th><th>3</th><th>4</th></tr>
+		<tr><th>5</th><td>6</td><td>7</td><td>8</td></tr>
+	</table>
+	
+	<br /><br /><br />
+	
+	<table>
+		<tr><th rowspan="2">1</th><th>2</th><th>3</th><th>4</th></tr>
+		<tr><td>6</td><td>7</td><td>8</td></tr>
+	</table>
+	
+	<br /><br /><br />
+
+	<table>
+		<tr><th>1</th><th>2</th><th>3</th><th>4</th></tr>
+		<tr><th>5</th><td>6</td><td>7</td><td>8</td></tr>
+	</table>	
+	
+	
+</body>
+</html>

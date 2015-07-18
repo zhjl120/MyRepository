@@ -1,0 +1,27 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=gb2312" />
+<title>CSS滤镜</title>
+<style type="text/css">
+	
+	div{
+		background:orange;
+		width:200px;
+		height:100px;	
+	}
+	/*滤镜只有一个属性filter,但是它有多个值，每个值又有多个属性，详查文档*/
+	img{
+		filter:blur(strength=10,direction=275);	
+		filter:flipv;
+	}
+	
+</style>
+</head>
+<body>
+
+	<div>滤镜测试1</div>
+	<img src="img/1.jpg" />
+	
+</body>
+</html>

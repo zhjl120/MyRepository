@@ -1,0 +1,87 @@
+1画线：
+	在视类中对消息进行捕获（WM_LBUTTONDOWN	WM_LBUTTONUP）
+函数：MessageBox("neirong")(它比API中的MessageBox少了一个句柄参数，因为该句柄被封装在类中)
+      定义数据成语point，并在构造函数中初始化为0
+      在OnLButtonDown响应函数中保存起点坐标;在OnLButtonUp响应函数中创建DC（hdc=::GetDC(m_hWnd);
+       
+ 一.  使用API函数画图：
+      画图函数：MoveToEx(hdc,point1.x,point1.y,NULL);
+                LineTo(hdc,point2.x,point2.y);
+      在画完图后需释放句柄:   ::ReleaseDC(m_hWnd,hdc);
+ 
+ 二.  MFC把绘图操作都封装在CDC类中
+      CDC *pDC=GetDC();
+      pDC->MoveTo(point1);
+      pDC->LineTo(point2);
+      ReleaseDC(pDC);
+	
+ 三.  CClientDC从CDC中派生，它会帮我们自动获取和释放DC,以便使用
+      CClientDC dc(this);//定义一个DC对象    //CClientDC dc(GetParent());//获取一个框架类DC，由此可在框架上画线
+      dc.MoveTo(point1);						 //框架窗口有非客户区，标题栏和菜单栏（不包括工具栏）；视类没有非客户群
+      dc.LineTo(point2);//直接使用，不用获取和释放DC
+ 
+ 四.  CWindowDC也从CDC中派生，它会帮我们自动获取和释放DC,以便使用
+      CWindowDC可以访问整个屏幕区域
+      CWindowDC dc(GetParent());//以父窗口句柄创建DC ，可访问整个屏幕区域，包括客户区和非客户区（标题栏和菜单栏都可画图）
+   // CWindowDC dc(GetDesktopWindow());//以桌面窗口句柄创建DC，即可访问整个桌面，即可在整个桌面画图
+      dc.MoveTo(point1);
+      dc.LineTo(point2);
+
+2.更改画笔颜色
+          CPen类；CPen(画笔类型，宽度，RGB());
+      CPen pen(PS_SOLID,1,RGB(255,0,0));创建一个画笔
+      CClientDC dc(this); //创建设备描述表
+      CPen *pOldPen=dc.SelectObject(&pen);//创建画笔后需将它选进设备描述表，函数选进新画笔并返回先前的画笔
+      dc.MoveTo(point1);
+      dc.LineTo(point2);
+      dc.SelectObject(pOldPen);//还原先前画笔
+
+3.画刷的创建，通常用画刷填充一块矩形区域
+  一 .    CBrush类  CBrush(RGB());
+      CBrush brush(RGB(255,0,0));
+      CClientDC dc(this);
+      dc.FillRect(point1,point2,&brush);//该函数用指定画刷填充矩形区域
+  二. 位图画刷
+      CBitmap bitmap;//创建位图对象
+      bitmap.LoadBitmap(IDB_BITMAP1);//初始化位图，即加载位图
+      CBrush brush(&bitmap);//用位图创建画刷，即创建好了一个位图画刷
+      CClientDC dc(this);
+      dc.FillRect(point1,point2,&brush)
+  三. 透明画刷
+       CBrush *pBrush=CBrush::FromHandle((HBRUSH)GetStockObject(NULL_BRUSH));//GetStockObject函数返回一个空画刷句柄，FromHandle函数将画刷句柄转化为画刷对象指针
+                              FromHandle是静态成员函数，它属于类本身，不属于任何对象，所以不能用CBrush对象去调用它
+       CBrush *pOldBrush=dc.SelectObject(pBrush);//此处参数没有取址符，因为它本来就是一个指针
+       dc.Rectangle(CRect(point1,point2));
+       dc.SelectObject(pOldBrush);
+
+4.画连续线条，通过WM_MOUSEMOVE消息，响应鼠标移动
+       CClientDC dc(this);
+       CPen pen(PS_SOLID,1,RGB(255,0,0));
+       CPen *pOldPen=dc.SelectObject(&pen);
+       if(m_bDraw==TRUE)
+       {
+            dc.MoveTo(point1);
+ 	    dc.LineTo(point2);
+            point1=point2;
+       }
+       dc.SelectObject(pOldPen);
+       附：SetROP2(R2_BLACK);//设置绘图模式
+
+
+MFC中添加消息响应时所添加代码的3个地方
+1.在类的头文件中
+protected:
+	//<<AFX_MSG(CDrawView)    //注释宏
+	afx_msg void OnLButtonDown(UINT nFlags,CPoint point)；//函数原型声明
+	//>>AFX_MSG
+2.在源文件中
+BEGIN_MESSAGE_MAP(CDrawView,CView)
+	//<<AFX_MSG_MAP(CDrawView)
+	ON_WM_LBUTTONDOWN() 	//将消息与响应函数联系起来
+	??>>AFX_MSG_MAP
+	ON_COMMAND(ID-FILE_PRINT,CView::OnFilePrint)
+	....
+END_MESSAGE_MAP()
+3.即响应函数。
+
+

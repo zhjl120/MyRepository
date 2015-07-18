@@ -1,0 +1,166 @@
+1.菜单命令路由
+	对菜单项的响应顺序：View ->Doc ->MainFrame -> App
+	首先是Fram类接收到消息，然后将它传递给View类，如果View类有对该消息的处理，则由View类进行响应，如果没有则View类将消息传递给Doc类，
+	如果Doc类有对该消息的映射则就由Doc类处理，如果没有则将消息回递给View类，View类再将消息回递给Fram类，如果Fram类有对该消息的处理
+	则有由ram类响应，如果没有，则Fram类将消息传递给App类。
+
+
+2.消息分类
+   一.标准消息：
+	除WM_COMMAND之外，所有以WM_开头的消息。
+   二.命令消息：
+	来自菜单、加速键或工具栏按钮的消息。这类消息都以WM_COMMAND呈现。在MFC中，通过菜单项的标识（ID）来区分
+	不同的命令消息；在SDK中，通过消息的wParam参数识别。
+   三.通告消息：
+	由控件产生的消息，例如：按钮的单击、列表框的选择等均产生此类消息，为的是向其父窗口（通常是对话框）通知
+	事件的发生。这类消息也是以WM_COMMAND消息呈现。     
+
+3.标记菜单
+	在Fram类中的OnCreate函数中，即在窗口创建完成之后添加代码
+	函数：
+	获取框架窗口菜单栏的指针：GetMenu()//返回一个指向CMenu对象的指针
+	获取子菜单：GetSubMenu();//返回一个指向子菜单的指针
+	标记菜单项：CheckMenuItem();//标记一个菜单项
+	
+	在OnCreate函数中：
+	GetMenu()->GetSubMenu(0)->CheckMenuItem(0,MF_BYPOSITION | MF)CHECKED);//获取菜单栏->获取子菜单->标记第0个菜单项
+	//GetMenu()->GetSubMenu(0)->CheckMenuItem(ID_FILE_NEW,MF_BYCOMMAND| MF)CHECKED);//上句通过索引寻找菜单项，此处通过ID号寻找菜单项
+
+4.缺省菜单项
+	一个子菜单中只能有一个缺省菜单
+	函数：SetDefaultItem();//设置缺省菜单项，可按ID和索引两种方式设置  
+	GetMenu()->GetSubMenu(0)->SetDefaultItem(1,TRUE); //通过索引设置
+  	//GetMenu()->GetSubMenu(0)->SetDefaultItem(IDM_FILE_OPEN);/该函数默认以ID方式设置，所以不用设置第二个参数
+	
+5.图形标记菜单
+	函数：SetMeunItemBitmap();//可创建一个图形标记菜单
+	      GetSystemMetrics();//获取系统信息
+	CBitmap m_bitmap1,m_bitmap2;//将此变量定义为成员变量
+	
+	bitmap1.LoadBitmap(IDB_BITMAP1);
+	bitmap2.LoadBitmap(IDB_BITMAP2);图形标记大小应该为13*13,可通过GetSystemMetrics函数设置SM_CXMENUCHECK和SM_CYMENUCHECK参数进行查询
+	GetMenu()->GetSubMeun(0)->SetMenuItemBitmap(0,MF_BYPOSITION,&m_bitmap1，&m_bitmap2);//该函数的后两个参数一个用来设置被复选时和没被复选时的位图标记
+
+6.禁止菜单项
+	如果需要自己设置菜单，则需要将m_bAutoMeunEnable在构造函数中设置为FALSE，否则对菜单的设置将不会生效
+	函数：EnableMenuItem();//禁止、开启或灰化菜单项，可通过索引和ID设置
+	GetMenu()->GetSubMenu(0)->EnableMenuItem(1,MF_BYPOSITION | MF_DISABLE | MF_GRAYED);//MF_DISABLE用于禁止菜单项，MF_GRAYED用于将菜单项变灰
+
+7.取消整个菜单
+	函数：SetMenu();
+	CMenu menu;//将变量定义为成员变量
+
+	SetMenu(NULL);//移走当前菜单
+	menu.LoadMenu(IDR_MAINFRAME);//加载一个新菜单
+	SetMenu(&menu);将新菜单设置进程序
+
+8.将工具栏上的某个图标与一个菜单项关联只需要将图标的ID号与菜单项的ID设为一样就可以了
+  如果想要让一个菜单可以使用或者不能使用，则可以在ClassWizard中选择菜单项ID，然后选择UPDATE_COMMAND_UI添加处理函数，然后在函数中调用Enable函数
+
+
+9.右键弹出菜单
+	函数：TrackPopupMenu();//
+	在资源视图中添加一个弹出菜单，并编辑好菜单项		
+	再添加WM_RBUTTONDOWN消息处理函数
+	CMenu menu;
+	menu.LoadMenu(IDR_MENU1);
+	CMenu *pPopup=menu.GetSubMenu(0);//获取子菜单指针
+	ClientToScreen(&point);	//在WM_RBUTTIONDOWN中获取的鼠标坐标是屏幕坐标，这里需要的是视类的坐标，所以需要进行转换
+	pPopup->TrackPopupMenu(TPM_RIGHTBUTTON,point.x,point.y,this);//设置弹出菜单的位置和窗口句柄
+
+10.动态添加、删除、插入菜单
+	在CMainFrame类中的OnCreate函数中动态设置菜单，即在窗口创建完成之后	
+   一.	添加菜单：
+	函数：AppendMenu();将一个菜单或菜单项添加到现有菜单的末尾
+	CMenu menu;//将该变量设为成员变量
+	menu.CreatePopupMenu();//创建一个空菜单
+	GetMenu()->AppendMenu(MF_POPUP,(UINT)menu.m_hMenu,"MenuName");//先获取需要添加菜单的菜单栏，然后添加菜单，如果第一个参数是MF_POPUP，则第二个参数是菜单的句柄，第三个参数是菜单名称
+   二.  插入菜单：
+	函数：InsertMenu();//插入一个菜单
+	CMenu menu;//将该变量设为成员变量
+	menu.CreatePopupMenu();//创建一个空菜单
+	GetMenu()->InsertMenu(2,MF_BYPOSITION | MF_POPUP,(UINT)menu.m_hMenu,"MenuName");//在第二个菜单项前插入菜单
+	menu.AppendMenu(MF_STRING,111,"Hello");//在空菜单中添加菜单项
+	menu.AppendMenu(MF_STRING,112,"Hi");
+	menu.AppendMenu(MF_STRING,112,"Hai");
+   三.	删除菜单：
+	函数：DeleteMenu();//删除一个指定的菜单项或子菜单
+	GetMenu()->DeleteMenu(1,MF_BYPOSITION);//删除第一个子菜单
+	GetMenu()->GetSubMenu(0)->DeleteMenu(2,MF_BYPOSITION);//删除第0个子菜单中的第2个菜单项
+
+11.对动态菜单添加消息响应
+   一.  创建资源ID：Resource.h中定义->  #define IDM_HELLO     111     //此后ID111就可以用IDM_HELLO代替了
+   二.	头文件中添加响应函数原型： afx_msg void OnHello();
+   三. 	源文件中添加消息映射：  ON_COMMAND(IDM_HELLO,OnHello)
+   四.	响应函数：void CMainFrame::OnHello(){.....}
+
+12.电话本程序
+	在View中添加WM_CHAR消息以接收用户输入
+	成员变量:int m_nIndex; //初始化为-1，用于判断是否是第一次回车
+		 CMenu menu;  
+		 CString m_strLine;用于记录用户输入，初始化为NULL
+		 CStringArray m_strArray;  //用于保存所有录入的信息
+  一.OnChar消息:
+	CClientDC dc(this);
+	if(0x0d==nChar)//是否回车
+	{
+	   if(0==++m_nIndex)//是否第一次回车
+	   {
+		m_menu.CreatePopupMenu();//如果是第一次回车则创建一个空菜单
+		GetParent()->GetMenu()->AppendMenu(MF_POPUP,(UINT)m_menu.m_hMenu,"PhoneBook");//通过父类指针调用获取菜单栏指针，然后添加一个空菜单
+	  	GetParent()->DrawMenuBar();//如果一个菜单在窗口创建完成之后创建，则需要重绘菜单栏才能显示
+	    }
+	    m_menu.AppendMenu(MF_STRING,IDM_PHONE1+m_nIndex,m_strLine.Left(m_strLine,Find(' ')));//如果不是第一次回车，则在菜单中添加一个菜单项
+	    m_strArray.Add(m_strLine);//将每次输入的信息保存到容器中
+	    m_strLine.Empty();
+	    Invalidate();//使窗口重绘，以擦除先前的输入
+	}
+	else
+	{
+	    m_strLine+=nChar;
+	    dc.TextOut(0,0,m_strLine);
+	}
+
+13.  	在框架内截获本该由View最先响应命令消息的机会，通过增减虚函数覆盖基类的CMainFrame::OnCommand(WPARAM ,LPARAM)函数完成;
+	WPARAM参数中含有命令消息的ID（可通过判断ID来选择性的处理需要处理的消息），这本该是由View类处理的，但是如果在框架类
+	中重写OnCommand函数，就可以在View获取处理机会之前对该消息进行处理。
+	CFrameWnd::GetActiveView();//在框架类中获取视类的指针
+	
+	代码：
+	BOOL CMainFrame::OnCommand(WPARAM wParam,LPARAM lParam)//在框架类中重写此函数以截获命令消息
+	{
+		int MenuCmdId=LOWORD(wParam);//取出消息的ID
+		CMenu2View *pView=(CMenu2View*)GetActiveView();//获取View类的指针
+		if(MenuCmdId>=IDM_PHONE1 && MenuCmdId<IDM_PHONE1+pView->m_strArray.GetSize())//判断该消息是否是需要处理的消息
+		{
+	 	    CClientDC dc(pView);
+	 	    dc.TextOut(0,0,pView->m_strArray.GetAt(MenuCmdId-IDM_PHONE1));//在框架类中对命令消息进行处理，不是在View类中
+	 	    return TRUE;//返回结果，不再对消息进行路由
+		}
+		return CFrameWnd::OnCommand(wParam,lParam);//如果不是需要处理的消息，则还是交由基类路由给View类处理
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
